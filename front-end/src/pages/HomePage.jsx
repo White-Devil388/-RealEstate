@@ -252,9 +252,7 @@ const HomePage = () => {
                 whileHover={{ y: -5 }}
                 className="card-panel h-full border-t-2 border-t-accent p-7 space-y-4 transition-all duration-300 shadow-sm hover:shadow-lg"
               >
-                <div className="index-numeral text-3xl font-bold text-animated-gold text-gold-glow">
-                  {achievement.value}
-                </div>
+                <CounterNumber value={achievement.value} className="index-numeral text-3xl font-bold text-animated-gold text-gold-glow block" />
                 <h3 className="font-heading text-xl font-semibold text-ink">{achievement.title}</h3>
                 <p className="text-sm text-ink-secondary leading-relaxed">{achievement.desc}</p>
               </motion.article>

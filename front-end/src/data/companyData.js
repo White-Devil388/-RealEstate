@@ -11,24 +11,24 @@ export const COMPANY_STATS = [
 
 export const ACHIEVEMENTS = [
   {
+    value: '3',
+    title: 'Development categories',
+    desc: 'Residential, township, and commercial spaces shaped for modern NCR living.'
+  },
+  {
+    value: '4',
+    title: 'Guiding principles',
+    desc: 'Integrity, transparency, biophilic innovation, and a customer-first culture.'
+  },
+  {
     value: '18+',
     title: 'Years of excellence',
     desc: 'A consistent record of building considered spaces across NCR.'
   },
   {
-    value: '3.5M+',
-    title: 'Sq. ft. delivered',
-    desc: 'Residential and commercial environments shaped with care.'
-  },
-  {
-    value: '1,450+',
-    title: 'Families at home',
-    desc: 'A growing community that trusts the Gurukripa standard.'
-  },
-  {
-    value: '99.4%',
-    title: 'On-time delivery',
-    desc: 'Milestones tracked with discipline from blueprint to handover.'
+    value: '100%',
+    title: 'RERA-first governance',
+    desc: 'Clear documentation and transparent milestones from blueprint to handover.'
   }
 ];
 
