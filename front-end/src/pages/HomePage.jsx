@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useLead } from '../context/LeadContext';
 import { PROJECTS } from '../data/projectsData';
 import { BLOG_POSTS } from '../data/blogData';
-import { ACHIEVEMENTS, COMPANY_STATS, CORE_VALUES, TESTIMONIALS } from '../data/companyData';
+import { ACHIEVEMENT_IMAGES, ACHIEVEMENTS, COMPANY_STATS, CORE_VALUES, TESTIMONIALS } from '../data/companyData';
 import {
   MapPin, Search, Calendar, ArrowRight, ShieldCheck,
   Compass, Send, Calculator, Quote, PhoneCall, X
@@ -231,11 +231,11 @@ const HomePage = () => {
         transition={{ duration: 0.6 }}
         className="section-muted section-block"
       >
-        <div className="container-custom space-y-8">
-          <div className="section-head section-head-center py-4 sm:py-6">
-            <span className="badge-gold">Our Achievements</span>
-            <h2 className="section-title">Progress you can <span className="text-animated-gold">measure</span></h2>
-            <p className="section-desc text-center">The milestones behind every address we bring to life.</p>
+        <div className="container-custom space-y-10">
+          <div className="section-head section-head-center max-w-3xl py-4 sm:py-6">
+            <span className="badge-gold">Why choose us</span>
+            <h2 className="section-title">Built on trust, <span className="text-animated-gold">proven by progress</span></h2>
+            <p className="section-desc text-center">From first blueprint to final handover, our work is measured in lasting relationships and spaces that feel like home.</p>
           </div>
 
           <motion.div
@@ -243,19 +243,35 @@ const HomePage = () => {
             whileInView="visible"
             viewport={{ once: true, margin: '-50px' }}
             variants={staggerContainer}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-7 lg:gap-8"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6"
           >
-            {ACHIEVEMENTS.map((achievement) => (
-              <motion.article
-                key={achievement.title}
-                variants={fadeInUp}
-                whileHover={{ y: -5 }}
-                className="card-panel h-full border-t-2 border-t-accent p-7 space-y-4 transition-all duration-300 shadow-sm hover:shadow-lg"
-              >
-                <CounterNumber value={achievement.value} className="index-numeral text-3xl font-bold text-animated-gold text-gold-glow block" />
-                <h3 className="font-heading text-xl font-semibold text-ink">{achievement.title}</h3>
-                <p className="text-sm text-ink-secondary leading-relaxed">{achievement.desc}</p>
-              </motion.article>
+            {[ACHIEVEMENTS[0], { image: ACHIEVEMENT_IMAGES[0], alt: 'Modern residential architecture' }, ACHIEVEMENTS[1], { image: ACHIEVEMENT_IMAGES[1], alt: 'Contemporary commercial architecture' }, ACHIEVEMENTS[2], ACHIEVEMENTS[3]].map((item) => (
+              item.image ? (
+                <motion.div
+                  key={item.image}
+                  variants={fadeInUp}
+                  className="min-h-[260px] overflow-hidden border border-border bg-surface shadow-sm sm:min-h-[320px]"
+                >
+                  <img src={item.image} alt={item.alt} className="h-full w-full object-cover transition-transform duration-700 hover:scale-105" />
+                </motion.div>
+              ) : (
+                <motion.article
+                  key={item.title}
+                  variants={fadeInUp}
+                  whileHover={{ y: -4 }}
+                  className="card-panel min-h-[260px] border border-border p-6 sm:min-h-[320px] sm:p-7 flex flex-col justify-between shadow-sm transition-all duration-300 hover:border-accent hover:shadow-lg"
+                >
+                  <div className="space-y-4">
+                    <div className="h-10 w-10 border border-accent/30 bg-accent-subtle" />
+                    <h3 className="font-heading text-xl font-semibold text-ink">{item.title}</h3>
+                    <p className="text-sm leading-relaxed text-ink-secondary">{item.desc}</p>
+                  </div>
+                  <div className="mt-6 border-t border-border pt-4">
+                    <CounterNumber value={item.value} className="index-numeral text-3xl font-bold text-animated-gold text-gold-glow block" />
+                    <div className="mt-1 text-xs uppercase tracking-[0.12em] text-ink-muted">Verified milestone</div>
+                  </div>
+                </motion.article>
+              )
             ))}
           </motion.div>
         </div>

@@ -11,25 +11,30 @@ export const COMPANY_STATS = [
 
 export const ACHIEVEMENTS = [
   {
-    value: '3',
-    title: 'Development categories',
-    desc: 'Residential, township, and commercial spaces shaped for modern NCR living.'
-  },
-  {
-    value: '4',
-    title: 'Guiding principles',
-    desc: 'Integrity, transparency, biophilic innovation, and a customer-first culture.'
-  },
-  {
     value: '18+',
-    title: 'Years of excellence',
-    desc: 'A consistent record of building considered spaces across NCR.'
+    title: 'Legacy of trust',
+    desc: 'A long-term commitment to thoughtful real estate across the NCR.'
+  },
+  {
+    value: '35+',
+    title: 'Successful projects',
+    desc: 'Residential, township, and commercial developments shaped with care.'
+  },
+  {
+    value: '3.5M+',
+    title: 'Sq. ft. developed',
+    desc: 'Considered spaces designed around families, work, and everyday life.'
   },
   {
     value: '100%',
-    title: 'RERA-first governance',
-    desc: 'Clear documentation and transparent milestones from blueprint to handover.'
+    title: 'Transparent delivery',
+    desc: 'Clear documentation and disciplined milestones from blueprint to handover.'
   }
+];
+
+export const ACHIEVEMENT_IMAGES = [
+  'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1000&q=85',
+  'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1000&q=85'
 ];
 
 export const CORE_VALUES = [
