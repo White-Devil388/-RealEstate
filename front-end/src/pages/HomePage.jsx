@@ -210,7 +210,7 @@ const HomePage = () => {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.3 }}
         transition={{ duration: 0.6 }}
-        className="container-custom"
+        className="container-custom py-4 sm:py-6"
       >
         <div className="card-panel p-8 sm:p-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 divide-y sm:divide-y-0 sm:divide-x divide-border">
           {COMPANY_STATS.map((stat, idx) => (
@@ -260,8 +260,8 @@ const HomePage = () => {
       </motion.section>
 
       {/* ── Featured Projects ── */}
-      <section className="container-custom space-y-7">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <section className="container-custom space-y-9">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 py-4 sm:py-6">
           <div className="section-head">
             <span className="badge-gold">Curated Portfolio</span>
             <h2 className="section-title">Featured <span className="text-animated-gold">developments</span></h2>
@@ -450,8 +450,8 @@ const HomePage = () => {
       </section>
 
       {/* ── Blog ── */}
-      <section className="container-custom space-y-7 pb-4">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <section className="container-custom space-y-9 pb-4">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 py-4 sm:py-6">
           <div className="section-head">
             <span className="badge-gold">Insights</span>
             <h2 className="section-title">Real estate trends</h2>
