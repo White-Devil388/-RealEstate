@@ -232,30 +232,34 @@ const HomePage = () => {
         className="section-muted section-block"
       >
         <div className="container-custom space-y-8">
-          <div className="section-head">
+          <div className="section-head section-head-center py-4 sm:py-6">
             <span className="badge-gold">Our Achievements</span>
             <h2 className="section-title">Progress you can <span className="text-animated-gold">measure</span></h2>
-            <p className="section-desc">The milestones behind every address we bring to life.</p>
+            <p className="section-desc text-center">The milestones behind every address we bring to life.</p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {ACHIEVEMENTS.map((achievement, index) => (
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-50px' }}
+            variants={staggerContainer}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-7 lg:gap-8"
+          >
+            {ACHIEVEMENTS.map((achievement) => (
               <motion.article
                 key={achievement.title}
-                initial={{ opacity: 0, y: 18 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.4 }}
-                transition={{ duration: 0.45, delay: index * 0.08 }}
-                className="card-panel border-t-2 border-t-accent p-6 sm:p-7 space-y-4"
+                variants={fadeInUp}
+                whileHover={{ y: -5 }}
+                className="card-panel h-full border-t-2 border-t-accent p-7 space-y-4 transition-all duration-300 shadow-sm hover:shadow-lg"
               >
-                <div className="index-numeral text-3xl font-semibold text-animated-gold text-gold-glow">
+                <div className="index-numeral text-3xl font-bold text-animated-gold text-gold-glow">
                   {achievement.value}
                 </div>
                 <h3 className="font-heading text-xl font-semibold text-ink">{achievement.title}</h3>
-                <p className="text-sm leading-relaxed text-ink-secondary">{achievement.desc}</p>
+                <p className="text-sm text-ink-secondary leading-relaxed">{achievement.desc}</p>
               </motion.article>
             ))}
-          </div>
+          </motion.div>
         </div>
       </motion.section>
 
