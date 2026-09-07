@@ -5,7 +5,7 @@ const formatCurrency = (value) => new Intl.NumberFormat('en-IN', {
 	maximumFractionDigits: 0,
 }).format(Math.round(value));
 
-const EMICAL = () => {
+const EMICAL = ({ compact = false }) => {
 	const [loanAmount, setLoanAmount] = useState(5000000);
 	const [interestRate, setInterestRate] = useState(8.5);
 	const [tenure, setTenure] = useState(20);
@@ -33,11 +33,11 @@ const EMICAL = () => {
 	};
 
 	return (
-		<section className="container-custom py-12 sm:py-16" aria-labelledby="emi-calculator-title">
+		<section className={compact ? 'py-0' : 'container-custom py-12 sm:py-16'} aria-labelledby="emi-calculator-title">
 			<div className="relative overflow-hidden border border-border bg-surface-raised shadow-[0_18px_45px_rgba(30,41,38,0.08)]">
 				<div className="absolute right-0 top-0 h-full w-1/3 blueprint-grid opacity-40 pointer-events-none" />
 
-				<div className="relative grid lg:grid-cols-[1.05fr_0.95fr]">
+				<div className={`relative grid ${compact ? 'grid-cols-1' : 'lg:grid-cols-[1.05fr_0.95fr]'}`}>
 					<div className="p-6 sm:p-9 lg:p-12">
 						<div className="mb-8 flex items-start justify-between gap-4 border-b border-border pb-6">
 							<div>

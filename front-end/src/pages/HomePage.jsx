@@ -567,7 +567,7 @@ const HomePage = () => {
               ×
             </button>
 
-            <EMICAL />
+            <EMICAL compact />
           </div>
         </div>
       )}
