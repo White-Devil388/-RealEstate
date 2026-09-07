@@ -215,9 +215,9 @@ const HomePage = () => {
         <div className="card-panel p-8 sm:p-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 divide-y sm:divide-y-0 sm:divide-x divide-border">
           {COMPANY_STATS.map((stat, idx) => (
             <div key={idx} className={`pt-6 sm:pt-0 space-y-2 group ${idx > 0 ? 'sm:pl-8 lg:pl-10' : ''}`}>
-              <CounterNumber value={stat.value} className="index-numeral text-4xl font-semibold text-animated-gold text-gold-glow group-hover:scale-105 transition-transform block" />
-              <div className="text-base font-semibold text-ink group-hover:text-accent transition-colors">{stat.label}</div>
-              <div className="text-sm text-ink-muted">{stat.sub}</div>
+              <CounterNumber value={stat.value} className="index-numeral text-4xl font-bold text-animated-gold text-gold-glow group-hover:scale-105 transition-transform block" />
+              <div className="text-base font-bold text-ink group-hover:text-accent transition-colors">{stat.label}</div>
+              <div className="text-sm font-medium text-ink-muted">{stat.sub}</div>
             </div>
           ))}
         </div>
