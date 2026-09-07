@@ -414,8 +414,8 @@ const HomePage = () => {
       </section>
 
       {/* ── Journey ── */}
-      <section className="container-custom space-y-8">
-        <div className="section-head section-head-center">
+      <section className="container-custom space-y-10">
+        <div className="section-head section-head-center py-4 sm:py-6">
           <span className="badge-gold">Your Journey</span>
           <h2 className="section-title">Path to homeownership</h2>
           <p className="section-desc text-center">A transparent advisory experience from discovery to key handover</p>
