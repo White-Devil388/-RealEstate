@@ -552,11 +552,11 @@ const HomePage = () => {
 
       {isOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 overflow-y-auto"
           onClick={() => setIsOpen(false)}
         >
           <div
-            className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto bg-white rounded-lg"
+            className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto bg-surface border border-accent/40 rounded-3xl p-6 sm:p-8 shadow-2xl"
             style={{ scrollbarWidth: "none" }}
             onClick={(e) => e.stopPropagation()}
           >

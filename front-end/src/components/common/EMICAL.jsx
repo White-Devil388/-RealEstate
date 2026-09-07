@@ -34,21 +34,21 @@ const EMICAL = ({ compact = false }) => {
 
 	return (
 		<section className={compact ? 'py-0' : 'container-custom py-12 sm:py-16'} aria-labelledby="emi-calculator-title">
-			<div className="relative overflow-hidden border border-border bg-surface-raised shadow-[0_18px_45px_rgba(30,41,38,0.08)]">
+			<div className={`relative overflow-hidden ${compact ? '' : 'border border-border bg-surface-raised shadow-[0_18px_45px_rgba(30,41,38,0.08)]'}`}>
 				<div className="absolute right-0 top-0 h-full w-1/3 blueprint-grid opacity-40 pointer-events-none" />
 
 				<div className={`relative grid ${compact ? 'grid-cols-1' : 'lg:grid-cols-[1.05fr_0.95fr]'}`}>
-					<div className="p-6 sm:p-9 lg:p-12">
-						<div className="mb-8 flex items-start justify-between gap-4 border-b border-border pb-6">
+					<div className={compact ? 'p-0' : 'p-6 sm:p-9 lg:p-12'}>
+						<div className={`${compact ? 'mb-6 pb-5' : 'mb-8 pb-6'} flex items-start justify-between gap-4 border-b border-border`}>
 							<div>
 								<div className="mb-3 flex items-center gap-2 text-[11px] font-mono font-semibold uppercase tracking-[0.16em] text-accent">
 									<Calculator className="h-4 w-4" aria-hidden="true" />
 									Financial planning desk
 								</div>
-								<h2 id="emi-calculator-title" className="font-heading text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
+								<h2 id="emi-calculator-title" className={`${compact ? 'text-2xl sm:text-3xl' : 'text-3xl sm:text-4xl'} font-heading font-semibold tracking-tight text-ink`}>
 									Estimate your monthly outlay
 								</h2>
-								<p className="mt-3 max-w-xl text-sm leading-relaxed text-ink-secondary">
+								<p className="mt-2 max-w-xl text-sm leading-relaxed text-ink-secondary">
 									Adjust the numbers to see an indicative home loan repayment plan.
 								</p>
 							</div>
@@ -63,7 +63,7 @@ const EMICAL = ({ compact = false }) => {
 							</button>
 						</div>
 
-						<div className="space-y-8">
+						<div className={compact ? 'space-y-5' : 'space-y-8'}>
 							<div>
 								<div className="mb-3 flex items-center justify-between gap-4">
 									<label htmlFor="loan-amount" className="form-label mb-0">Loan amount</label>
@@ -129,7 +129,7 @@ const EMICAL = ({ compact = false }) => {
 						</div>
 					</div>
 
-					<div className="relative flex flex-col justify-between bg-dark p-6 text-[var(--text-inverse)] sm:p-9 lg:p-12">
+					<div className={`relative flex flex-col justify-between bg-dark text-[var(--text-inverse)] ${compact ? 'mt-6 p-5' : 'p-6 sm:p-9 lg:p-12'}`}>
 						<div>
 							<div className="text-[11px] font-mono uppercase tracking-[0.16em] text-[var(--brass)]">Indicative repayment</div>
 							<div className="mt-4 border-b border-white/15 pb-8">
