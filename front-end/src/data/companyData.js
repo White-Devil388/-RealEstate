@@ -9,6 +9,29 @@ export const COMPANY_STATS = [
   { label: 'On-Time Delivery', value: '99.4%', sub: 'Verified construction milestones' }
 ];
 
+export const ACHIEVEMENTS = [
+  {
+    value: '18+',
+    title: 'Years of excellence',
+    desc: 'A consistent record of building considered spaces across NCR.'
+  },
+  {
+    value: '3.5M+',
+    title: 'Sq. ft. delivered',
+    desc: 'Residential and commercial environments shaped with care.'
+  },
+  {
+    value: '1,450+',
+    title: 'Families at home',
+    desc: 'A growing community that trusts the Gurukripa standard.'
+  },
+  {
+    value: '99.4%',
+    title: 'On-time delivery',
+    desc: 'Milestones tracked with discipline from blueprint to handover.'
+  }
+];
+
 export const CORE_VALUES = [
   {
     title: 'Architectural Integrity',
