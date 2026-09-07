@@ -426,7 +426,7 @@ const HomePage = () => {
           whileInView="visible"
           viewport={{ once: true, margin: '-50px' }}
           variants={staggerContainer}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-5"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-7 lg:gap-8"
         >
           {[
             { step: '01', title: 'Discover', desc: 'Explore catalog & virtual tours' },
