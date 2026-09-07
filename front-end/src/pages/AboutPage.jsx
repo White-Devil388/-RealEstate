@@ -14,7 +14,7 @@ const AboutPage = () => {
         <div className="max-w-4xl space-y-6">
           <span className="badge-gold">About Gurukripa Arcon India</span>
           <h1 className="font-heading text-4xl sm:text-6xl lg:text-7xl font-bold text-ink leading-[1.12]">
-            Pioneering <span className="text-gold-gradient">Architectural Mastery</span> & Transparent Governance
+            Pioneering <span className="text-animated-gold">Architectural Mastery</span> & Transparent Governance
           </h1>
           <p className="max-w-3xl text-base sm:text-xl text-ink-secondary leading-relaxed">
             Founded with an unyielding commitment to engineering excellence, Gurukripa Arcon India Pvt. Ltd. has shaped NCR's skyline through ultra-luxury residential towers, eco-conscious green townships, and Grade-A commercial hubs.
@@ -26,7 +26,7 @@ const AboutPage = () => {
       <section className="container-custom grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
         <div className="space-y-6">
           <h2 className="font-heading text-3xl sm:text-4xl font-bold text-ink border-b border-accent/25 pb-4">
-            Our Legacy & Story
+            Our Legacy & <span className="text-animated-gold">Story</span>
           </h2>
           <p className="text-base text-ink-secondary leading-relaxed">
             Over the past 18 years, Gurukripa Arcon India has grown from a visionary engineering studio into one of NCR’s most trusted real estate developers. Every blueprint is audited by senior structural engineers and certified to exceed IS 1893 seismic safety standards.

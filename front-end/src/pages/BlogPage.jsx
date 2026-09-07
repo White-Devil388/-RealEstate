@@ -37,7 +37,7 @@ const BlogPage = () => {
       <section className="container-custom space-y-4">
         <span className="badge-gold">Gurukripa Real Estate Journal</span>
         <h1 className="font-heading text-4xl sm:text-6xl font-bold text-ink">
-          Market Insights & <span className="text-gold-gradient">Architectural Analysis</span>
+          Market Insights & <span className="text-animated-gold">Architectural Analysis</span>
         </h1>
         <p className="text-base sm:text-lg text-ink-secondary max-w-3xl leading-relaxed">
           Expert analysis on NCR real estate growth corridors, biophilic design, RERA laws, and high-yield property investment strategies.

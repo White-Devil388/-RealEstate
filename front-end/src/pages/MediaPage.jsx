@@ -20,7 +20,7 @@ const MediaPage = () => {
       <section className="container-custom space-y-4">
         <span className="badge-gold">Media & Press Gallery</span>
         <h1 className="font-heading text-4xl sm:text-6xl font-bold text-ink">
-          Gurukripa <span className="text-gold-gradient">Visuals & Announcements</span>
+          Gurukripa <span className="text-animated-gold">Visuals & Announcements</span>
         </h1>
         <p className="text-base sm:text-lg text-ink-secondary max-w-3xl leading-relaxed">
           Explore walkthrough videos, architectural photography, event coverage, and corporate releases.

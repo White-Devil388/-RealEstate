@@ -1,10 +1,14 @@
 import mongoose from 'mongoose';
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/tecai';
-
 const connectDB = async () => {
+  const mongoUri = process.env.MONGO_URI;
+
+  if (!mongoUri) {
+    throw new Error('MONGO_URI is not configured. Add the MongoDB Atlas connection string to .env.');
+  }
+
   try {
-    await mongoose.connect(MONGO_URI, {
+    await mongoose.connect(mongoUri, {
       serverSelectionTimeoutMS: 5000,
       autoIndex: true
     });

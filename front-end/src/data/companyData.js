@@ -32,6 +32,24 @@ export const CORE_VALUES = [
   }
 ];
 
+export const TESTIMONIALS = [
+  {
+    quote: 'The entire process felt clear and well managed. The team helped us compare layouts, understand the payment plan, and settle into our new home with confidence.',
+    name: 'Aarav Mehta',
+    detail: 'Homeowner, Gurukripa Heights'
+  },
+  {
+    quote: 'What stood out was the attention to detail. From the first site visit to handover, every commitment was documented and delivered on time.',
+    name: 'Neha Kapoor',
+    detail: 'Resident, Greenview Township'
+  },
+  {
+    quote: 'Gurukripa gave us the confidence to invest from another city. Their advisors were responsive, transparent, and genuinely focused on our priorities.',
+    name: 'Rohan Bhatia',
+    detail: 'Investor, Arcon Business Park'
+  }
+];
+
 export const LEADERSHIP_TEAM = [
   {
     name: 'Er. shubham mishra',

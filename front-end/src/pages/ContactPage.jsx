@@ -41,7 +41,7 @@ const ContactPage = () => {
       <section className="container-custom space-y-4">
         <span className="badge-gold">Get in Touch</span>
         <h1 className="font-heading text-4xl sm:text-6xl font-bold text-ink">
-          Connect with <span className="text-gold-gradient">Gurukripa Executive Advisory</span>
+          Connect with <span className="text-animated-gold">Gurukripa Executive Advisory</span>
         </h1>
         <p className="text-base sm:text-lg text-ink-secondary max-w-3xl leading-relaxed">
           Visit our corporate headquarters, schedule a private project consultation, or send us your direct requirement.

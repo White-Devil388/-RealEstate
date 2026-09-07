@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useLead } from '../context/LeadContext';
 
 // Import Pages
@@ -36,25 +37,42 @@ const RouteChangeHandler = () => {
   return null;
 };
 
+const pageVariants = {
+  initial: { opacity: 0, y: 15 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] } },
+  exit: { opacity: 0, y: -10, transition: { duration: 0.2, ease: 'easeIn' } },
+};
+
+const AnimatedPage = ({ children }) => (
+  <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit">
+    {children}
+  </motion.div>
+);
+
 const AppRoutes = () => {
+  const location = useLocation();
+
   return (
     <>
       <RouteChangeHandler />
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/home" element={<HomePage />} />
-        <Route path="/about" element={<AboutPage />} />
-        <Route path="/projects" element={<ProjectsPage />} />
-        <Route path="/media" element={<MediaPage />} />
-        <Route path="/blog" element={<BlogPage />} />
-        <Route path="/careers" element={<CareersPage />} />
-        <Route path="/contact" element={<ContactPage />} />
-        <Route path="/site-visit" element={<SiteVisitPage />} />
-        <Route path="/lead-admin" element={<LeadAdminPage />} />
-        <Route path="*" element={<HomePage />} />
-      </Routes>
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
+          <Route path="/" element={<AnimatedPage><HomePage /></AnimatedPage>} />
+          <Route path="/home" element={<AnimatedPage><HomePage /></AnimatedPage>} />
+          <Route path="/about" element={<AnimatedPage><AboutPage /></AnimatedPage>} />
+          <Route path="/projects" element={<AnimatedPage><ProjectsPage /></AnimatedPage>} />
+          <Route path="/media" element={<AnimatedPage><MediaPage /></AnimatedPage>} />
+          <Route path="/blog" element={<AnimatedPage><BlogPage /></AnimatedPage>} />
+          <Route path="/careers" element={<AnimatedPage><CareersPage /></AnimatedPage>} />
+          <Route path="/contact" element={<AnimatedPage><ContactPage /></AnimatedPage>} />
+          <Route path="/site-visit" element={<AnimatedPage><SiteVisitPage /></AnimatedPage>} />
+          <Route path="/lead-admin" element={<AnimatedPage><LeadAdminPage /></AnimatedPage>} />
+          <Route path="*" element={<AnimatedPage><HomePage /></AnimatedPage>} />
+        </Routes>
+      </AnimatePresence>
     </>
   );
 };
 
 export default AppRoutes;
+

@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useLead } from '../context/LeadContext';
+import { useSearchParams } from 'react-router-dom';
 import { PROJECTS } from '../data/projectsData';
 import { Search, MapPin, Grid, Map, Calendar, ArrowRight, SlidersHorizontal, Check } from 'lucide-react';
 
 const ProjectsPage = () => {
   const { setActiveProjectModal, openSiteVisitForProject } = useLead();
+  const [searchParams] = useSearchParams();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLocation, setSelectedLocation] = useState('All');
@@ -37,6 +39,12 @@ const ProjectsPage = () => {
     if (selectedStatus !== 'All' && project.status !== selectedStatus) {
       return false;
     }
+    if (selectedStatus === 'All' && searchParams.get('status') && project.projectStatus !== searchParams.get('status')) {
+      return false;
+    }
+    if (selectedCategory === 'All' && searchParams.get('type') && project.projectType !== searchParams.get('type')) {
+      return false;
+    }
     return true;
   });
 
@@ -47,7 +55,7 @@ const ProjectsPage = () => {
       <section className="container-custom space-y-4">
         <span className="badge-gold">Central Project Discovery Platform</span>
         <h1 className="font-heading text-4xl sm:text-6xl font-bold text-ink">
-          Benchmark <span className="text-gold-gradient">Real Estate Projects</span>
+          Benchmark <span className="text-animated-gold">Real Estate Projects</span>
         </h1>
         <p className="text-base sm:text-lg text-ink-secondary max-w-3xl leading-relaxed">
           Filter through our verified ultra-luxury residential towers, biophilic townscapes, and Grade-A executive commercial developments across NCR.

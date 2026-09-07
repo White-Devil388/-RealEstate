@@ -21,7 +21,7 @@ const CareersPage = () => {
       <section className="container-custom space-y-4">
         <span className="badge-gold">Careers at Gurukripa</span>
         <h1 className="font-heading text-4xl sm:text-6xl font-bold text-ink">
-          Build the Future of <span className="text-gold-gradient">Urban Architecture</span>
+          Build the Future of <span className="text-animated-gold">Urban Architecture</span>
         </h1>
         <p className="text-base sm:text-lg text-ink-secondary max-w-3xl leading-relaxed">
           Join an elite team of structural engineers, architects, and real estate consultants driving benchmark developments across Northern India.

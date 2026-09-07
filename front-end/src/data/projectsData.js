@@ -3917,4 +3917,8 @@ export const PROJECTS = [
     "hasVideo": false,
     "brochureUrl": "#download-brochure"
   }
-];
+].map((project) => ({
+  ...project,
+  projectType: ['Commercial Complex', 'Mixed Use'].includes(project.category) ? 'commercial' : 'residential',
+  projectStatus: project.status === 'Ready to Move' ? 'completed' : 'ongoing'
+}));
