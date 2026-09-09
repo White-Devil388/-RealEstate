@@ -18,6 +18,24 @@
   --text-inverse: #fbfaf7;
 }
 
+:root.dark {
+  --bg: #17201d;
+  --surface: #202b27;
+  --surface-raised: #283632;
+  --muted: #2d3b36;
+  --ink: #f3f0e8;
+  --ink-secondary: #c0c9c3;
+  --ink-muted: #9aa7a0;
+  --border: #405049;
+  --accent: #d6ad6b;
+  --accent-dark: #f0c98c;
+  --accent-light: #ead09d;
+  --accent-subtle: #3b3327;
+  --brass: #e0bb7c;
+  --dark: #101614;
+  --text-inverse: #17201d;
+}
+
 @theme {
   --color-bg: var(--bg);
   --color-surface: var(--surface);
@@ -55,14 +73,14 @@
   .hero-heading { max-width: 14ch; color: var(--text-inverse); font: 400 clamp(2.5rem, 7vw, 6.4rem)/.97 system-ui, "Segoe UI", sans-serif; letter-spacing: 0; }
   .hero-subtitle { max-width: 38rem; color: rgba(251,250,247,.7); font-size: 1.05rem; line-height: 1.75; }
   .section-block { padding-block: 6rem; }
-  .section-muted { background: #e9e8e1; }
+  .section-muted { background: var(--muted); }
   .section-head { max-width: 42rem; }
   .section-head-center { margin-inline: auto; text-align: center; }
   .section-title { margin-top: .7rem; color: var(--ink); font: 400 clamp(2rem, 4vw, 3.5rem)/1.05 system-ui, "Segoe UI", sans-serif; letter-spacing: 0; }
   .section-desc { margin-top: .8rem; color: var(--ink-secondary); line-height: 1.65; }
   .text-gold-gradient { color: var(--accent); }
-  .card-panel, .glass-card { border: 1px solid var(--border); background: rgba(251,250,247,.92); box-shadow: 0 16px 36px rgba(30,41,38,.05); }
-  .glass-panel { border: 1px solid var(--border); background: rgba(251,250,247,.92); box-shadow: 0 16px 36px rgba(30,41,38,.06); }
+  .card-panel, .glass-card { border: 1px solid var(--border); background: color-mix(in srgb, var(--surface) 92%, transparent); box-shadow: 0 16px 36px rgba(0,0,0,.12); }
+  .glass-panel { border: 1px solid var(--border); background: color-mix(in srgb, var(--surface) 92%, transparent); box-shadow: 0 16px 36px rgba(0,0,0,.14); }
   .glass-card { transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease; }
   .glass-card:hover { transform: translateY(-4px); border-color: var(--accent-light); box-shadow: 0 20px 42px rgba(30,41,38,.1); }
   .frame-corners::after { content: ""; position: absolute; inset: .7rem; border: 1px solid rgba(255,255,255,.4); pointer-events: none; }

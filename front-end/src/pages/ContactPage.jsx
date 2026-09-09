@@ -270,7 +270,7 @@ const ContactPage = () => {
           <h2 className="font-heading text-3xl sm:text-4xl font-bold text-ink">Frequently Asked Questions</h2>
         </div>
 
-        <div className="faq-list mt-5">
+        <div className="faq-list mt-5 space-y-3">
           {FAQ_ITEMS.map((faq, idx) => {
             const isOpen = openFaqIndex === idx;
             return (

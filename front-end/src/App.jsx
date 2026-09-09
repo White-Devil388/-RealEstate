@@ -1,6 +1,7 @@
 import React from 'react';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter, useNavigate } from 'react-router-dom';
 import { LeadProvider } from './context/LeadContext';
+import { ThemeProvider } from './context/ThemeContext';
 import AppRoutes from './routes/AppRoutes';
 
 import Header from './components/common/Header';
@@ -14,11 +15,15 @@ import BookSiteVisitModal from './components/modals/BookSiteVisitModal';
 import JobDetailModal from './components/modals/JobDetailModal';
 import BlogDetailModal from './components/modals/BlogDetailModal';
 import BrochureModal from './components/modals/BrochureModal';
+import AuthContainer from './components/auth/AuthContainer';
 
 const AppContent = () => {
+  const [isAuthModalOpen, setIsAuthModalOpen] = React.useState(false);
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen flex flex-col bg-bg text-ink">
-      <Header />
+      <Header onOpenAuth={() => setIsAuthModalOpen(true)} />
       <main className="flex-grow">
         <AppRoutes />
       </main>
@@ -33,6 +38,14 @@ const AppContent = () => {
       <JobDetailModal />
       <BlogDetailModal />
       <BrochureModal />
+      <AuthContainer
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onAuthenticated={() => {
+          setIsAuthModalOpen(false);
+          navigate('/dashboard');
+        }}
+      />
     </div>
   );
 };
@@ -40,9 +53,11 @@ const AppContent = () => {
 function App() {
   return (
     <BrowserRouter>
-      <LeadProvider>
-        <AppContent />
-      </LeadProvider>
+      <ThemeProvider>
+        <LeadProvider>
+          <AppContent />
+        </LeadProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }

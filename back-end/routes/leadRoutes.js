@@ -1,4 +1,5 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import Lead from '../models/Lead.js';
 
 const router = express.Router();
@@ -32,7 +33,14 @@ const defaultLeads = [
   }
 ];
 
+const fallbackLeads = [...defaultLeads];
+const isDatabaseConnected = () => mongoose.connection.readyState === 1;
+
 router.get('/', async (_req, res) => {
+  if (!isDatabaseConnected()) {
+    return res.json(fallbackLeads);
+  }
+
   try {
     const leads = await Lead.find().sort({ createdAt: -1 });
 
@@ -69,6 +77,11 @@ router.post('/', async (req, res) => {
       dateSubmitted: new Date()
     };
 
+    if (!isDatabaseConnected()) {
+      fallbackLeads.unshift(newLead);
+      return res.status(201).json(newLead);
+    }
+
     const createdLead = await Lead.create(newLead);
 
     return res.status(201).json({
@@ -87,6 +100,17 @@ router.patch('/:id', async (req, res) => {
 
     if (!status) {
       return res.status(400).json({ message: 'Status is required' });
+    }
+
+    if (!isDatabaseConnected()) {
+      const lead = fallbackLeads.find((item) => item.id === req.params.id);
+
+      if (!lead) {
+        return res.status(404).json({ message: 'Lead not found' });
+      }
+
+      lead.status = status;
+      return res.json(lead);
     }
 
     const updatedLead = await Lead.findOneAndUpdate(

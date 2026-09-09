@@ -13,6 +13,8 @@ import CareersPage from '../pages/CareersPage';
 import ContactPage from '../pages/ContactPage';
 import SiteVisitPage from '../pages/SiteVisitPage';
 import LeadAdminPage from '../pages/LeadAdminPage';
+import UserDashboardPage from '../pages/UserDashboardPage';
+import ProtectedRoutes from './protectedRoutes';
 
 // Helper component to sync route path with LeadContext and scroll to top
 const RouteChangeHandler = () => {
@@ -32,6 +34,7 @@ const RouteChangeHandler = () => {
     else if (path === 'contact') setCurrentPage('contact');
     else if (path === 'site-visit') setCurrentPage('site-visit');
     else if (path === 'lead-admin') setCurrentPage('lead-admin');
+    else if (path === 'dashboard') setCurrentPage('dashboard');
   }, [location, setCurrentPage]);
 
   return null;
@@ -67,6 +70,14 @@ const AppRoutes = () => {
           <Route path="/contact" element={<AnimatedPage><ContactPage /></AnimatedPage>} />
           <Route path="/site-visit" element={<AnimatedPage><SiteVisitPage /></AnimatedPage>} />
           <Route path="/lead-admin" element={<AnimatedPage><LeadAdminPage /></AnimatedPage>} />
+          <Route
+            path="/dashboard"
+            element={(
+              <ProtectedRoutes>
+                <AnimatedPage><UserDashboardPage /></AnimatedPage>
+              </ProtectedRoutes>
+            )}
+          />
           <Route path="*" element={<AnimatedPage><HomePage /></AnimatedPage>} />
         </Routes>
       </AnimatePresence>

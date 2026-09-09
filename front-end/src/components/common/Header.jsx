@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLead } from '../../context/LeadContext';
-import { Calendar, Menu, X, PhoneCall, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Calendar, Menu, X, PhoneCall, ArrowRight, UserRound } from 'lucide-react';
+import ThemeToggle from './ThemeToggle';
 
-const Header = () => {
+const Header = ({ onOpenAuth }) => {
   const navigate = useNavigate();
-  const { currentPage, setCurrentPage, openSiteVisitForProject, leads } = useLead();
+  const { currentPage, setCurrentPage, openSiteVisitForProject } = useLead();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -139,25 +140,6 @@ const Header = () => {
         {/* Actions */}
         <div className="hidden lg:flex items-center gap-1.5 xl:gap-2 shrink-0">
           <motion.button
-            whileHover={{ scale: 1.04 }}
-            whileTap={{ scale: 0.96 }}
-            type="button"
-            onClick={() => handleNavClick('lead-admin', '/lead-admin')}
-            className={`text-[11px] font-semibold px-2.5 py-2 border transition-all flex items-center gap-1 xl:gap-1.5 ${
-              currentPage === 'lead-admin'
-                ? 'bg-accent text-[var(--text-inverse)] border-accent'
-                : 'bg-transparent text-ink-secondary border-border hover:border-accent hover:text-accent'
-            }`}
-            title="Lead CRM Dashboard"
-          >
-            <ShieldCheck className="w-3.5 h-3.5 xl:w-4 xl:h-4" />
-            <span className="hidden xl:inline">Leads</span>
-            <span className="bg-muted text-accent text-[10px] xl:text-[11px] px-1.5 py-0.5 font-mono font-semibold border border-border">
-              {leads.length}
-            </span>
-          </motion.button>
-
-          <motion.button
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             type="button"
@@ -167,6 +149,21 @@ const Header = () => {
             <Calendar className="w-3.5 h-3.5 xl:w-4 xl:h-4" />
             <span>Book Site Visit</span>
           </motion.button>
+          <button
+            type="button"
+            onClick={onOpenAuth}
+            className="group flex items-center gap-2 border border-accent/40 bg-accent/10 px-2.5 py-1.5 text-left transition-all duration-300 hover:-translate-y-0.5 hover:border-accent hover:bg-accent/20 hover:shadow-[0_6px_18px_rgba(165,111,40,0.18)]"
+            title="Open account"
+          >
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-accent text-[var(--text-inverse)] shadow-sm transition-transform duration-300 group-hover:scale-105">
+              <UserRound className="h-3.5 w-3.5" />
+            </span>
+            <span className="hidden xl:flex xl:flex-col xl:leading-tight">
+              <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-accent">Account</span>
+              <span className="text-[11px] font-semibold text-ink">Login / Sign Up</span>
+            </span>
+          </button>
+          <ThemeToggle />
         </div>
 
         {/* Mobile toggle */}
@@ -235,21 +232,26 @@ const Header = () => {
                 </React.Fragment>
               ))}
 
-              <button
-                type="button"
-                onClick={() => handleNavClick('lead-admin', '/lead-admin')}
-                className="text-left text-sm font-medium py-2.5 px-1 flex items-center justify-between mt-1"
-              >
-                <div className="flex items-center gap-2 text-ink-secondary">
-                  <ShieldCheck className="w-4 h-4 text-accent" />
-                  <span>Lead Admin</span>
-                </div>
-                <span className="bg-muted text-accent text-xs px-2 py-0.5 font-mono font-bold border border-border">
-                  {leads.length}
-                </span>
-              </button>
-
               <div className="pt-4 mt-1 flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    onOpenAuth();
+                  }}
+                  className="group flex w-full items-center justify-between border border-accent/45 bg-accent/10 px-4 py-3 text-left transition-all hover:border-accent hover:bg-accent/20"
+                >
+                  <span className="flex items-center gap-3">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-accent text-[var(--text-inverse)]">
+                      <UserRound className="w-4 h-4" />
+                    </span>
+                    <span className="flex flex-col leading-tight">
+                      <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-accent">Your account</span>
+                      <span className="text-sm font-bold text-ink">Login / Sign Up</span>
+                    </span>
+                  </span>
+                  <ArrowRight className="h-4 w-4 text-accent transition-transform group-hover:translate-x-1" />
+                </button>
                 <button
                   type="button"
                   onClick={() => {
@@ -268,6 +270,7 @@ const Header = () => {
                   <PhoneCall className="w-4 h-4" />
                   <span>+91 9589807388</span>
                 </a>
+                <ThemeToggle showLabel />
               </div>
             </div>
           </motion.div>
