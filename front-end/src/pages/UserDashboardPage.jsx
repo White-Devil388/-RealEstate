@@ -34,22 +34,15 @@ import {
 } from 'lucide-react';
 import { useLead } from '../context/LeadContext';
 import { useProjects } from '../context/ProjectContext';
+import { useAuth } from '../context/AuthContext';
 
 const UserDashboardPage = () => {
   const { projects } = useProjects();
   const navigate = useNavigate();
   const { openSiteVisitForProject, setActiveProjectModal, leads, showToast } = useLead();
+  const { user, openAuthModal, logout } = useAuth();
 
   const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'enquiries' | 'saved' | 'profile' | 'documents'
-  
-  // User auth state
-  const [user, setUser] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('teca-user'));
-    } catch {
-      return null;
-    }
-  });
 
   // Saved properties state
   const [savedProjectIds, setSavedProjectIds] = useState(() => {
@@ -75,6 +68,16 @@ const UserDashboardPage = () => {
     emailAlerts: true
   });
 
+  useEffect(() => {
+    if (user) {
+      setProfileForm((prev) => ({
+        ...prev,
+        name: user.name || prev.name,
+        email: user.email || prev.email
+      }));
+    }
+  }, [user]);
+
   // Search filter inside Enquiries tab
   const [enquirySearch, setEnquirySearch] = useState('');
   const [enquiryStatusFilter, setEnquiryStatusFilter] = useState('All');
@@ -91,9 +94,7 @@ const UserDashboardPage = () => {
   }, [savedProjectIds]);
 
   const handleLogout = () => {
-    localStorage.removeItem('teca-token');
-    localStorage.removeItem('teca-user');
-    setUser(null);
+    logout();
     showToast('Logged out successfully', 'info');
   };
 
@@ -190,7 +191,7 @@ const UserDashboardPage = () => {
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <button
               type="button"
-              onClick={() => navigate('/contact')}
+              onClick={() => openAuthModal('login')}
               className="btn-gold flex-1 py-3 font-bold text-xs"
             >
               Sign In / Register

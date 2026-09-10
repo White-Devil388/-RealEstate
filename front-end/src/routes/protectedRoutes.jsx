@@ -1,12 +1,12 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const ProtectedRoutes = ({ children }) => {
+  const { isAuthenticated } = useAuth();
   const location = useLocation();
-  const token = localStorage.getItem('teca-token');
-  const user = localStorage.getItem('teca-user');
 
-  if (!token || !user) {
+  if (!isAuthenticated) {
     return <Navigate to="/" replace state={{ from: location.pathname }} />;
   }
 

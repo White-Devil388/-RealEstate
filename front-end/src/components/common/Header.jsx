@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLead } from '../../context/LeadContext';
-import { Calendar, Menu, X, PhoneCall, ArrowRight, UserRound } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { Calendar, Menu, X, PhoneCall, ArrowRight, UserRound, LogOut, LayoutDashboard } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 
-const Header = ({ onOpenAuth }) => {
+const Header = () => {
   const navigate = useNavigate();
-  const { currentPage, setCurrentPage, openSiteVisitForProject } = useLead();
+  const { currentPage, setCurrentPage, openSiteVisitForProject, showToast } = useLead();
+  const { user, openAuthModal, logout } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -32,6 +34,12 @@ const Header = ({ onOpenAuth }) => {
     navigate(path);
     setIsMobileMenuOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleLogoutClick = () => {
+    logout();
+    if (showToast) showToast('Logged out successfully', 'info');
+    setIsMobileMenuOpen(false);
   };
 
   return (
@@ -149,20 +157,49 @@ const Header = ({ onOpenAuth }) => {
             <Calendar className="w-3.5 h-3.5 xl:w-4 xl:h-4" />
             <span>Book Site Visit</span>
           </motion.button>
-          <button
-            type="button"
-            onClick={onOpenAuth}
-            className="group flex items-center gap-2 border border-accent/40 bg-accent/10 px-2.5 py-1.5 text-left transition-all duration-300 hover:-translate-y-0.5 hover:border-accent hover:bg-accent/20 hover:shadow-[0_6px_18px_rgba(165,111,40,0.18)]"
-            title="Open account"
-          >
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-accent text-[var(--text-inverse)] shadow-sm transition-transform duration-300 group-hover:scale-105">
-              <UserRound className="h-3.5 w-3.5" />
-            </span>
-            <span className="hidden xl:flex xl:flex-col xl:leading-tight">
-              <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-accent">Account</span>
-              <span className="text-[11px] font-semibold text-ink">Login / Sign Up</span>
-            </span>
-          </button>
+
+          {user ? (
+            <div className="flex items-center gap-1.5 border border-accent/40 bg-accent/10 p-1 pl-2.5 rounded-full">
+              <button
+                type="button"
+                onClick={() => navigate('/dashboard')}
+                className="flex items-center gap-2 text-left hover:text-accent transition-colors"
+                title="Go to Dashboard"
+              >
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent text-[var(--text-inverse)] text-xs font-bold shadow-sm">
+                  {user.name?.charAt(0).toUpperCase() || 'U'}
+                </span>
+                <span className="text-xs font-bold text-ink max-w-[100px] truncate">
+                  {user.name?.split(' ')[0]}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleLogoutClick}
+                className="p-1.5 text-ink-muted hover:text-rose-500 hover:bg-rose-500/10 rounded-full transition-colors"
+                title="Log Out"
+              >
+                <LogOut className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => openAuthModal('login')}
+              className="group flex items-center gap-2 border border-accent/40 bg-accent/10 px-2.5 py-1.5 text-left transition-all duration-300 hover:-translate-y-0.5 hover:border-accent hover:bg-accent/20 hover:shadow-[0_6px_18px_rgba(165,111,40,0.18)]"
+              title="Open account"
+            >
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-accent text-[var(--text-inverse)] shadow-sm transition-transform duration-300 group-hover:scale-105">
+                <UserRound className="h-3.5 w-3.5" />
+              </span>
+              <span className="hidden xl:flex xl:flex-col xl:leading-tight">
+                <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-accent">Account</span>
+                <span className="text-[11px] font-semibold text-ink">Login / Sign Up</span>
+              </span>
+            </button>
+          )}
+
           <ThemeToggle />
         </div>
 
@@ -233,25 +270,63 @@ const Header = ({ onOpenAuth }) => {
               ))}
 
               <div className="pt-4 mt-1 flex flex-col gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsMobileMenuOpen(false);
-                    onOpenAuth();
-                  }}
-                  className="group flex w-full items-center justify-between border border-accent/45 bg-accent/10 px-4 py-3 text-left transition-all hover:border-accent hover:bg-accent/20"
-                >
-                  <span className="flex items-center gap-3">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-accent text-[var(--text-inverse)]">
-                      <UserRound className="w-4 h-4" />
+                {user ? (
+                  <div className="space-y-2 border border-accent/40 bg-accent/10 p-3 rounded-2xl">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-[var(--text-inverse)] font-bold text-xs">
+                          {user.name?.charAt(0).toUpperCase()}
+                        </span>
+                        <div>
+                          <div className="text-xs font-bold text-ink">{user.name}</div>
+                          <div className="text-[10px] text-ink-muted">{user.email}</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsMobileMenuOpen(false);
+                          navigate('/dashboard');
+                        }}
+                        className="btn-gold py-2 text-xs font-bold flex items-center justify-center gap-1.5"
+                      >
+                        <LayoutDashboard className="w-3.5 h-3.5" />
+                        <span>Dashboard</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleLogoutClick}
+                        className="btn-outline-gold py-2 text-xs font-semibold flex items-center justify-center gap-1.5"
+                      >
+                        <LogOut className="w-3.5 h-3.5" />
+                        <span>Log Out</span>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      openAuthModal('login');
+                    }}
+                    className="group flex w-full items-center justify-between border border-accent/45 bg-accent/10 px-4 py-3 text-left transition-all hover:border-accent hover:bg-accent/20"
+                  >
+                    <span className="flex items-center gap-3">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-accent text-[var(--text-inverse)]">
+                        <UserRound className="w-4 h-4" />
+                      </span>
+                      <span className="flex flex-col leading-tight">
+                        <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-accent">Your account</span>
+                        <span className="text-sm font-bold text-ink">Login / Sign Up</span>
+                      </span>
                     </span>
-                    <span className="flex flex-col leading-tight">
-                      <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-accent">Your account</span>
-                      <span className="text-sm font-bold text-ink">Login / Sign Up</span>
-                    </span>
-                  </span>
-                  <ArrowRight className="h-4 w-4 text-accent transition-transform group-hover:translate-x-1" />
-                </button>
+                    <ArrowRight className="h-4 w-4 text-accent transition-transform group-hover:translate-x-1" />
+                  </button>
+                )}
+
                 <button
                   type="button"
                   onClick={() => {
@@ -281,4 +356,3 @@ const Header = ({ onOpenAuth }) => {
 };
 
 export default Header;
-

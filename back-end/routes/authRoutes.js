@@ -8,9 +8,22 @@ const router = express.Router();
 
 const publicUser = (user) => ({ id: user._id, name: user.name, email: user.email });
 
+const ensureDbConnection = async () => {
+  if (mongoose.connection.readyState === 1) return true;
+  if (mongoose.connection.readyState === 2) {
+    // Wait up to 3 seconds for connecting state to settle
+    for (let i = 0; i < 30; i++) {
+      await new Promise((res) => setTimeout(res, 100));
+      if (mongoose.connection.readyState === 1) return true;
+    }
+  }
+  return mongoose.connection.readyState === 1;
+};
+
 router.post('/signup', async (req, res) => {
   try {
-    if (mongoose.connection.readyState !== 1) return res.status(503).json({ message: 'Database is unavailable' });
+    const isDbConnected = await ensureDbConnection();
+    if (!isDbConnected) return res.status(503).json({ message: 'Database connection is connecting or unavailable' });
 
     const { name, email, password } = req.body || {};
     if (!name?.trim() || !email?.trim() || !password) return res.status(400).json({ message: 'Name, email and password are required' });
@@ -25,13 +38,14 @@ router.post('/signup', async (req, res) => {
     return res.status(201).json({ token: createAuthToken(user), user: publicUser(user) });
   } catch (error) {
     console.error('Signup error:', error.message);
-    return res.status(500).json({ message: 'Unable to create account' });
+    return res.status(500).json({ message: error.message || 'Unable to create account' });
   }
 });
 
 router.post('/login', async (req, res) => {
   try {
-    if (mongoose.connection.readyState !== 1) return res.status(503).json({ message: 'Database is unavailable' });
+    const isDbConnected = await ensureDbConnection();
+    if (!isDbConnected) return res.status(503).json({ message: 'Database connection is connecting or unavailable' });
 
     const { email, password } = req.body || {};
     if (!email?.trim() || !password) return res.status(400).json({ message: 'Email and password are required' });
@@ -43,7 +57,7 @@ router.post('/login', async (req, res) => {
     return res.json({ token: createAuthToken(user), user: publicUser(user) });
   } catch (error) {
     console.error('Login error:', error.message);
-    return res.status(500).json({ message: 'Unable to login' });
+    return res.status(500).json({ message: error.message || 'Unable to login' });
   }
 });
 

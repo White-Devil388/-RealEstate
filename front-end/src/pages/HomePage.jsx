@@ -252,7 +252,16 @@ const HomePage = () => {
             variants={staggerContainer}
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6"
           >
-            {[ACHIEVEMENTS[0], { image: ACHIEVEMENT_IMAGES[0], alt: 'Modern residential architecture' }, ACHIEVEMENTS[1], { image: ACHIEVEMENT_IMAGES[1], alt: 'Contemporary commercial architecture' }, ACHIEVEMENTS[2], ACHIEVEMENTS[3]].map((item) => (
+            {[
+              ACHIEVEMENTS[0],
+              ACHIEVEMENT_IMAGES[0] ? { image: ACHIEVEMENT_IMAGES[0], alt: 'Modern residential architecture' } : null,
+              ACHIEVEMENTS[1],
+              ACHIEVEMENT_IMAGES[1] ? { image: ACHIEVEMENT_IMAGES[1], alt: 'Contemporary commercial architecture' } : null,
+              ACHIEVEMENTS[2],
+              ACHIEVEMENTS[3]
+            ]
+              .filter(Boolean)
+              .map((item) => (
               item.image ? (
                 <motion.div
                   key={item.image}
