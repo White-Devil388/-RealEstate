@@ -13,6 +13,7 @@ import CareersPage from '../pages/CareersPage';
 import ContactPage from '../pages/ContactPage';
 import SiteVisitPage from '../pages/SiteVisitPage';
 import LeadAdminPage from '../pages/LeadAdminPage';
+import AdminDashboardPage from '../pages/AdminDashboardPage';
 import UserDashboardPage from '../pages/UserDashboardPage';
 import ProtectedRoutes from './protectedRoutes';
 
@@ -33,7 +34,7 @@ const RouteChangeHandler = () => {
     else if (path === 'careers') setCurrentPage('careers');
     else if (path === 'contact') setCurrentPage('contact');
     else if (path === 'site-visit') setCurrentPage('site-visit');
-    else if (path === 'lead-admin') setCurrentPage('lead-admin');
+    else if (path === 'lead-admin' || path === 'admin') setCurrentPage('admin');
     else if (path === 'dashboard') setCurrentPage('dashboard');
   }, [location, setCurrentPage]);
 
@@ -69,7 +70,8 @@ const AppRoutes = () => {
           <Route path="/careers" element={<AnimatedPage><CareersPage /></AnimatedPage>} />
           <Route path="/contact" element={<AnimatedPage><ContactPage /></AnimatedPage>} />
           <Route path="/site-visit" element={<AnimatedPage><SiteVisitPage /></AnimatedPage>} />
-          <Route path="/lead-admin" element={<AnimatedPage><LeadAdminPage /></AnimatedPage>} />
+          <Route path="/admin" element={<AnimatedPage><AdminDashboardPage /></AnimatedPage>} />
+          <Route path="/lead-admin" element={<AnimatedPage><AdminDashboardPage /></AnimatedPage>} />
           <Route
             path="/dashboard"
             element={(

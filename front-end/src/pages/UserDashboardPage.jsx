@@ -33,9 +33,10 @@ import {
   Award
 } from 'lucide-react';
 import { useLead } from '../context/LeadContext';
-import { PROJECTS } from '../data/projectsData';
+import { useProjects } from '../context/ProjectContext';
 
 const UserDashboardPage = () => {
+  const { projects } = useProjects();
   const navigate = useNavigate();
   const { openSiteVisitForProject, setActiveProjectModal, leads, showToast } = useLead();
 
@@ -56,7 +57,7 @@ const UserDashboardPage = () => {
       const stored = localStorage.getItem('teca-saved-projects');
       if (stored) return JSON.parse(stored);
       // Default initial saved projects for rich demo presentation
-      return [PROJECTS[0]?.id, PROJECTS[2]?.id].filter(Boolean);
+      return [projects[0]?.id, projects[2]?.id].filter(Boolean);
     } catch {
       return [];
     }
@@ -137,7 +138,7 @@ const UserDashboardPage = () => {
     ? leads.filter((lead) => lead.email?.toLowerCase() === user.email?.toLowerCase())
     : [];
 
-  const savedProjectsList = PROJECTS.filter((p) => savedProjectIds.includes(p.id));
+  const savedProjectsList = projects.filter((p) => savedProjectIds.includes(p.id));
 
   const filteredLeads = userLeads.filter((lead) => {
     const matchesSearch =
@@ -547,7 +548,7 @@ const UserDashboardPage = () => {
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    {PROJECTS.slice(0, 2).map((project) => (
+                    {projects.slice(0, 2).map((project) => (
                       <div
                         key={project.id}
                         className="glass-card rounded-2xl overflow-hidden border border-accent/20 flex flex-col bg-surface"

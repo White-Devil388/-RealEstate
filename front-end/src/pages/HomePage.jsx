@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLead } from '../context/LeadContext';
-import { PROJECTS } from '../data/projectsData';
+import { useProjects } from '../context/ProjectContext';
 import { BLOG_POSTS } from '../data/blogData';
 import { ACHIEVEMENT_IMAGES, ACHIEVEMENTS, COMPANY_STATS, CORE_VALUES, TESTIMONIALS } from '../data/companyData';
 import {
@@ -13,6 +13,7 @@ import EMICAL from '../components/common/EMICAL';
 import CounterNumber from '../components/common/CounterNumber';
 
 const HomePage = () => {
+  const { projects } = useProjects();
   const [isOpen, setIsOpen] = useState(false);
   const [isCallbackModalOpen, setIsCallbackModalOpen] = useState(false);
   const navigate = useNavigate();
@@ -34,11 +35,11 @@ const HomePage = () => {
     }
   }, [showEMICalculator]);
 
-  const locationOptions = ['All', ...new Set(PROJECTS.map((p) => p.city).filter(Boolean))];
-  const categoryOptions = ['All', ...new Set(PROJECTS.map((p) => p.category).filter(Boolean))];
-  const statusOptions = ['All', ...new Set(PROJECTS.map((p) => p.status).filter(Boolean))];
+  const locationOptions = ['All', ...new Set(projects.map((p) => p.city).filter(Boolean))];
+  const categoryOptions = ['All', ...new Set(projects.map((p) => p.category).filter(Boolean))];
+  const statusOptions = ['All', ...new Set(projects.map((p) => p.status).filter(Boolean))];
 
-  const filteredProjects = PROJECTS.filter((p) => {
+  const filteredProjects = projects.filter((p) => {
     if (searchLocation !== 'All') {
       const loc = searchLocation.toLowerCase();
       if (!p.city.toLowerCase().includes(loc) && !p.location.toLowerCase().includes(loc)) return false;
@@ -49,8 +50,8 @@ const HomePage = () => {
   });
 
   const showcaseProjects = showcaseTab === 'All'
-    ? PROJECTS
-    : PROJECTS.filter((p) => p.category === showcaseTab);
+    ? projects
+    : projects.filter((p) => p.category === showcaseTab);
 
   const goToProjects = () => {
     setCurrentPage('projects');
@@ -589,7 +590,7 @@ const HomePage = () => {
                     className="form-select"
                   >
                     <option value="">Select a project</option>
-                    {PROJECTS.map((p) => (
+                    {projects.map((p) => (
                       <option key={p.id} value={p.name}>{p.name} ({p.city})</option>
                     ))}
                   </select>

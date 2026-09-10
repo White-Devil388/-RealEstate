@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, useNavigate } from 'react-router-dom';
 import { LeadProvider } from './context/LeadContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { ProjectProvider } from './context/ProjectContext';
 import AppRoutes from './routes/AppRoutes';
 
 import Header from './components/common/Header';
@@ -55,7 +56,9 @@ function App() {
     <BrowserRouter>
       <ThemeProvider>
         <LeadProvider>
-          <AppContent />
+          <ProjectProvider>
+            <AppContent />
+          </ProjectProvider>
         </LeadProvider>
       </ThemeProvider>
     </BrowserRouter>

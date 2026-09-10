@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useLead } from '../context/LeadContext';
+import { useProjects } from '../context/ProjectContext';
 import { useSearchParams } from 'react-router-dom';
-import { PROJECTS } from '../data/projectsData';
 import { Search, MapPin, Grid, Map, Calendar, ArrowRight, SlidersHorizontal, Check } from 'lucide-react';
 
 const ProjectsPage = () => {
+  const { projects } = useProjects();
   const { setActiveProjectModal, openSiteVisitForProject } = useLead();
   const [searchParams] = useSearchParams();
 
@@ -14,11 +15,11 @@ const ProjectsPage = () => {
   const [selectedStatus, setSelectedStatus] = useState('All');
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'map'
 
-  const locationOptions = ['All', ...new Set(PROJECTS.map((project) => project.city).filter(Boolean))];
-  const categoryOptions = ['All', ...new Set(PROJECTS.map((project) => project.category).filter(Boolean))];
-  const statusOptions = ['All', ...new Set(PROJECTS.map((project) => project.status).filter(Boolean))];
+  const locationOptions = ['All', ...new Set(projects.map((project) => project.city).filter(Boolean))];
+  const categoryOptions = ['All', ...new Set(projects.map((project) => project.category).filter(Boolean))];
+  const statusOptions = ['All', ...new Set(projects.map((project) => project.status).filter(Boolean))];
 
-  const filteredProjects = PROJECTS.filter((project) => {
+  const filteredProjects = projects.filter((project) => {
     if (searchTerm && !project.name.toLowerCase().includes(searchTerm.toLowerCase()) && !project.location.toLowerCase().includes(searchTerm.toLowerCase())) {
       return false;
     }

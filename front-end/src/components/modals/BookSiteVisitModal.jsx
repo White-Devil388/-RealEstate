@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLead } from '../../context/LeadContext';
-import { PROJECTS } from '../../data/projectsData';
+import { useProjects } from '../../context/ProjectContext';
 import { X, Calendar, Clock, Users, Car, CheckCircle2, Shield, Sparkles } from 'lucide-react';
 
 const BookSiteVisitModal = () => {
+  const { projects } = useProjects();
   const { 
     isSiteVisitModalOpen, 
     setIsSiteVisitModalOpen, 
@@ -31,14 +32,14 @@ const BookSiteVisitModal = () => {
   useEffect(() => {
     if (siteVisitSelectedProject) {
       setFormData((prev) => ({ ...prev, projectId: siteVisitSelectedProject.id }));
-    } else if (PROJECTS.length > 0) {
-      setFormData((prev) => ({ ...prev, projectId: PROJECTS[0].id }));
+    } else if (projects.length > 0) {
+      setFormData((prev) => ({ ...prev, projectId: projects[0].id }));
     }
-  }, [siteVisitSelectedProject]);
+  }, [siteVisitSelectedProject, projects]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const selectedProjObj = PROJECTS.find((p) => p.id === formData.projectId);
+    const selectedProjObj = projects.find((p) => p.id === formData.projectId);
     const projName = selectedProjObj ? selectedProjObj.name : 'General Site Inspection';
 
     submitLead({
@@ -140,7 +141,7 @@ const BookSiteVisitModal = () => {
                       className="form-select text-xs py-3"
                       required
                     >
-                      {PROJECTS.map((p) => (
+                      {projects.map((p) => (
                         <option key={p.id} value={p.id}>
                           {p.name} ({p.location}, {p.city})
                         </option>

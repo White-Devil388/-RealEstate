@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import { useLead } from '../context/LeadContext';
-import { PROJECTS } from '../data/projectsData';
+import { useProjects } from '../context/ProjectContext';
 import { Calendar, Clock, Car, Shield, CheckCircle2, Building2, Sparkles } from 'lucide-react';
 
 const SiteVisitPage = () => {
+  const { projects } = useProjects();
   const { submitLead } = useLead();
 
   const [form, setForm] = useState({
     name: '',
     phone: '',
     email: '',
-    projectId: PROJECTS[0]?.id || '',
+    projectId: projects[0]?.id || '',
     preferredDate: '',
     preferredTime: '11:00 AM',
     visitors: '2',
@@ -22,7 +23,7 @@ const SiteVisitPage = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const projObj = PROJECTS.find((p) => p.id === form.projectId);
+    const projObj = projects.find((p) => p.id === form.projectId);
     const projName = projObj ? projObj.name : 'General Site Inspection';
 
     const ticketId = `GA-VISIT-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -98,7 +99,7 @@ const SiteVisitPage = () => {
                   className="form-select"
                   required
                 >
-                  {PROJECTS.map((p) => (
+                  {projects.map((p) => (
                     <option key={p.id} value={p.id}>
                       {p.name} ({p.location}, {p.city}) - {p.category}
                     </option>
