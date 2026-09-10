@@ -1,18 +1,20 @@
 import React, { useState } from 'react';
 import { useLead } from '../context/LeadContext';
-import { CAREER_POSITIONS } from '../data/careersData';
+import { useData } from '../context/DataContext';
 import PlaceholderBadge from '../components/common/PlaceholderBadge';
-import { Briefcase, MapPin, ArrowRight, Award, GraduationCap, HeartHandshake, Sparkles } from 'lucide-react';
+import { Award, GraduationCap, HeartHandshake, Sparkles } from 'lucide-react';
 
 const CareersPage = () => {
   const { setActiveJobModal } = useLead();
+  const { careers, careersLoading } = useData();
+
   const [selectedDept, setSelectedDept] = useState('All');
 
   const departments = ['All', 'Engineering & Construction', 'Sales & Client Relations', 'Architecture & Design'];
 
   const filteredJobs = selectedDept === 'All'
-    ? CAREER_POSITIONS
-    : CAREER_POSITIONS.filter((j) => j.department === selectedDept);
+    ? careers
+    : careers.filter((j) => j.department === selectedDept);
 
   return (
     <div className="page-inner">
@@ -86,43 +88,59 @@ const CareersPage = () => {
           </div>
         </div>
 
-        <div className="space-y-5">
-          {filteredJobs.map((job) => (
-            <div
-              key={job.id}
-              onClick={() => setActiveJobModal(job)}
-              className="glass-card p-8 rounded-3xl border border-accent/25 bg-surface flex flex-col md:flex-row md:items-center justify-between gap-6 cursor-pointer group hover:border-accent transition-all shadow-lg"
-            >
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <span className="badge-gold text-xs">{job.department}</span>
-                  <span className="text-xs sm:text-sm text-accent font-bold">{job.type}</span>
-                </div>
-                <h3 className="font-heading text-2xl font-bold text-ink group-hover:text-accent transition-colors">
-                  {job.title}
-                </h3>
-                <div className="flex items-center gap-5 text-xs sm:text-sm text-ink-muted">
-                  <span>📍 {job.location}</span>
-                  <span>•</span>
-                  <span>Exp: {job.experience}</span>
-                  <span>•</span>
-                  <span className="text-accent font-bold">
-                    {job.salaryStipend.startsWith('[') ? (
-                      <PlaceholderBadge text={job.salaryStipend} size="small" />
-                    ) : (
-                      job.salaryStipend
-                    )}
-                  </span>
-                </div>
-              </div>
+        {/* Loading state */}
+        {careersLoading && (
+          <div className="flex items-center justify-center py-16 gap-4 text-ink-secondary">
+            <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+            <span className="text-base">Loading positions from database...</span>
+          </div>
+        )}
 
-              <button className="btn-gold whitespace-nowrap text-xs sm:text-sm py-3.5 px-6 font-bold">
-                <Sparkles className="w-4 h-4" />
-                <span>View & Apply</span>
-              </button>
-            </div>
-          ))}
-        </div>
+        {!careersLoading && (
+          <div className="space-y-5">
+            {filteredJobs.map((job) => (
+              <div
+                key={job.id || job._id}
+                onClick={() => setActiveJobModal(job)}
+                className="glass-card p-8 rounded-3xl border border-accent/25 bg-surface flex flex-col md:flex-row md:items-center justify-between gap-6 cursor-pointer group hover:border-accent transition-all shadow-lg"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <span className="badge-gold text-xs">{job.department}</span>
+                    <span className="text-xs sm:text-sm text-accent font-bold">{job.type}</span>
+                  </div>
+                  <h3 className="font-heading text-2xl font-bold text-ink group-hover:text-accent transition-colors">
+                    {job.title}
+                  </h3>
+                  <div className="flex items-center gap-5 text-xs sm:text-sm text-ink-muted">
+                    <span>📍 {job.location}</span>
+                    <span>•</span>
+                    <span>Exp: {job.experience}</span>
+                    <span>•</span>
+                    <span className="text-accent font-bold">
+                      {job.salaryStipend && job.salaryStipend.startsWith('[') ? (
+                        <PlaceholderBadge text={job.salaryStipend} size="small" />
+                      ) : (
+                        job.salaryStipend
+                      )}
+                    </span>
+                  </div>
+                </div>
+
+                <button className="btn-gold whitespace-nowrap text-xs sm:text-sm py-3.5 px-6 font-bold">
+                  <Sparkles className="w-4 h-4" />
+                  <span>View & Apply</span>
+                </button>
+              </div>
+            ))}
+
+            {filteredJobs.length === 0 && (
+              <div className="text-center py-16 text-ink-muted">
+                No open positions in this department currently.
+              </div>
+            )}
+          </div>
+        )}
       </section>
 
     </div>

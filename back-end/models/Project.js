@@ -1,5 +1,32 @@
 import mongoose from 'mongoose';
 
+const floorPlanSchema = new mongoose.Schema(
+  {
+    planType: { type: String, default: '' },
+    type: { type: String, default: '' },
+    area: { type: String, default: '' },
+    price: { type: String, default: '' }
+  },
+  { _id: false }
+);
+
+const amenitySchema = new mongoose.Schema(
+  {
+    name: { type: String, default: '' },
+    icon: { type: String, default: '' },
+    category: { type: String, default: '' }
+  },
+  { _id: false }
+);
+
+const connectivitySchema = new mongoose.Schema(
+  {
+    spot: { type: String, default: '' },
+    distance: { type: String, default: '' }
+  },
+  { _id: false }
+);
+
 const projectSchema = new mongoose.Schema(
   {
     id: {
@@ -73,26 +100,9 @@ const projectSchema = new mongoose.Schema(
       configurations: { type: String, default: '' },
       possession: { type: String, default: '' }
     },
-    amenities: [
-      {
-        name: String,
-        icon: String,
-        category: String
-      }
-    ],
-    floorPlans: [
-      {
-        type: String,
-        area: String,
-        price: String
-      }
-    ],
-    connectivity: [
-      {
-        spot: String,
-        distance: String
-      }
-    ],
+    amenities: [amenitySchema],
+    floorPlans: [floorPlanSchema],
+    connectivity: [connectivitySchema],
     reraNumber: {
       type: String,
       default: ''

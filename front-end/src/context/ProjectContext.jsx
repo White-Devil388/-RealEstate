@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { PROJECTS as INITIAL_PROJECTS } from '../data/projectsData';
 import { getProjects, createProjectApi, updateProjectApi, deleteProjectApi } from '../api/projectApi';
 
 const ProjectContext = createContext();
@@ -19,7 +18,7 @@ export const ProjectProvider = ({ children }) => {
     } catch (err) {
       console.error('Failed to load projects from localStorage:', err);
     }
-    return INITIAL_PROJECTS;
+    return [];
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -108,16 +107,14 @@ export const ProjectProvider = ({ children }) => {
     // Try API creation
     try {
       const createdApi = await createProjectApi(formattedProj);
-      if (createdApi) {
-        setProjects((prev) => [createdApi, ...prev]);
-        return createdApi;
-      }
+      const result = createdApi && createdApi.id ? createdApi : formattedProj;
+      setProjects((prev) => [result, ...prev]);
+      return result;
     } catch (e) {
-      console.log('Falling back to local storage creation');
+      console.error('Failed to create project on server:', e);
+      setProjects((prev) => [formattedProj, ...prev]);
+      return formattedProj;
     }
-
-    setProjects((prev) => [formattedProj, ...prev]);
-    return formattedProj;
   };
 
   // Update existing property card
@@ -145,7 +142,7 @@ export const ProjectProvider = ({ children }) => {
     try {
       await updateProjectApi(id, updatedFields);
     } catch (e) {
-      console.log('API update fallback to local state');
+      console.error('API update failed:', e);
     }
 
     return updatedObj;
@@ -158,14 +155,22 @@ export const ProjectProvider = ({ children }) => {
     try {
       await deleteProjectApi(id);
     } catch (e) {
-      console.log('API delete fallback to local state');
+      console.error('API delete failed:', e);
     }
   };
 
-  // Reset inventory back to initial seed data
-  const resetProjects = () => {
-    setProjects(INITIAL_PROJECTS);
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(INITIAL_PROJECTS));
+  // Reset inventory back to API data
+  const resetProjects = async () => {
+    try {
+      const apiData = await getProjects();
+      if (apiData && Array.isArray(apiData)) {
+        setProjects(apiData);
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(apiData));
+      }
+    } catch (e) {
+      setProjects([]);
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
+    }
   };
 
   return (

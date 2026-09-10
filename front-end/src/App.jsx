@@ -3,6 +3,7 @@ import { BrowserRouter, useNavigate } from 'react-router-dom';
 import { LeadProvider } from './context/LeadContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { ProjectProvider } from './context/ProjectContext';
+import { DataProvider } from './context/DataContext';
 import AppRoutes from './routes/AppRoutes';
 
 import Header from './components/common/Header';
@@ -57,7 +58,9 @@ function App() {
       <ThemeProvider>
         <LeadProvider>
           <ProjectProvider>
-            <AppContent />
+            <DataProvider>
+              <AppContent />
+            </DataProvider>
           </ProjectProvider>
         </LeadProvider>
       </ThemeProvider>

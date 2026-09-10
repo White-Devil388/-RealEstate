@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useLead } from '../context/LeadContext';
-import { FAQ_ITEMS } from '../data/companyData';
-import { MapPin, Phone, Mail, Clock, MessageSquare, Send, CheckCircle2, ChevronDown, Sparkles } from 'lucide-react';
+import { useData } from '../context/DataContext';
+import { MapPin, Phone, Mail, Clock, Send, CheckCircle2, ChevronDown, Sparkles } from 'lucide-react';
 
 const ContactPage = () => {
   const { submitLead, openSiteVisitForProject } = useLead();
+  const { companyData } = useData();
+  const FAQ_ITEMS = companyData.faqItems || [];
 
   const [form, setForm] = useState({
     name: '',

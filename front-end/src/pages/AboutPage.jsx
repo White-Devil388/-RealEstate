@@ -1,10 +1,20 @@
 import React from 'react';
 import { useLead } from '../context/LeadContext';
-import { CORE_VALUES, LEADERSHIP_TEAM } from '../data/companyData';
-import { Building2, Award, ShieldCheck, Target, Eye, Users, ArrowRight, CheckCircle2, Sparkles } from 'lucide-react';
+import { useData } from '../context/DataContext';
+import { Award, ShieldCheck, Target, Eye, Sparkles } from 'lucide-react';
+
+const ICON_MAP = {
+  ShieldCheck: <ShieldCheck className="w-10 h-10 text-accent shrink-0" />,
+  FileText: <ShieldCheck className="w-10 h-10 text-accent shrink-0" />,
+  Leaf: <ShieldCheck className="w-10 h-10 text-accent shrink-0" />,
+  Users: <ShieldCheck className="w-10 h-10 text-accent shrink-0" />
+};
 
 const AboutPage = () => {
-  const { setCurrentPage, openSiteVisitForProject } = useLead();
+  const { openSiteVisitForProject } = useLead();
+  const { companyData, companyLoading } = useData();
+
+  const { coreValues = [], leadershipTeam = [] } = companyData;
 
   return (
     <div className="page-inner">
@@ -29,7 +39,7 @@ const AboutPage = () => {
             Our Legacy & <span className="text-animated-gold">Story</span>
           </h2>
           <p className="text-base text-ink-secondary leading-relaxed">
-            Over the past 18 years, Gurukripa Arcon India has grown from a visionary engineering studio into one of NCR’s most trusted real estate developers. Every blueprint is audited by senior structural engineers and certified to exceed IS 1893 seismic safety standards.
+            Over the past 18 years, Gurukripa Arcon India has grown from a visionary engineering studio into one of NCR's most trusted real estate developers. Every blueprint is audited by senior structural engineers and certified to exceed IS 1893 seismic safety standards.
           </p>
           
           <div className="space-y-4 pt-2">
@@ -86,7 +96,31 @@ const AboutPage = () => {
         </div>
       </section>
 
-      {/* Leadership & Team */}
+      {/* Core Values — Dynamic from MongoDB */}
+      {!companyLoading && coreValues.length > 0 && (
+        <section className="container-custom space-y-10">
+          <div className="max-w-2xl space-y-4">
+            <span className="badge-gold">Core Philosophy</span>
+            <h2 className="font-heading text-3xl sm:text-5xl font-bold text-ink">
+              The Gurukripa Standard
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {coreValues.map((val, i) => (
+              <div key={i} className="glass-card p-8 space-y-4 border border-accent/20 bg-surface hover:border-accent transition-all rounded-3xl">
+                <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center">
+                  {ICON_MAP[val.icon] || <ShieldCheck className="w-6 h-6 text-accent" />}
+                </div>
+                <h3 className="font-heading text-xl font-bold text-ink">{val.title}</h3>
+                <p className="text-sm text-ink-secondary leading-relaxed">{val.desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Leadership & Team — Dynamic from MongoDB */}
       <section className="container-custom space-y-12">
         <div className="max-w-2xl mx-auto text-center space-y-4">
           <span className="badge-gold">Executive Steering Board</span>
@@ -95,22 +129,31 @@ const AboutPage = () => {
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-10">
-          {LEADERSHIP_TEAM.map((leader, i) => (
-            <div key={i} className="glass-card p-8 flex flex-col items-center text-center space-y-5 rounded-3xl border border-accent/30 bg-surface hover:border-accent transition-all">
-              <img
-                src={leader.image}
-                alt={leader.name}
-                className="w-32 h-32 rounded-full object-cover border-2 border-accent shadow-xl"
-              />
-              <div className="space-y-1.5">
-                <h3 className="font-heading text-2xl font-bold text-ink">{leader.name}</h3>
-                <div className="text-xs sm:text-sm text-accent font-extrabold uppercase tracking-wider">{leader.role}</div>
+        {companyLoading && (
+          <div className="flex items-center justify-center py-16 gap-4 text-ink-secondary">
+            <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+            <span className="text-base">Loading team info...</span>
+          </div>
+        )}
+
+        {!companyLoading && leadershipTeam.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-10">
+            {leadershipTeam.map((leader, i) => (
+              <div key={i} className="glass-card p-8 flex flex-col items-center text-center space-y-5 rounded-3xl border border-accent/30 bg-surface hover:border-accent transition-all">
+                <img
+                  src={leader.image}
+                  alt={leader.name}
+                  className="w-32 h-32 rounded-full object-cover border-2 border-accent shadow-xl"
+                />
+                <div className="space-y-1.5">
+                  <h3 className="font-heading text-2xl font-bold text-ink">{leader.name}</h3>
+                  <div className="text-xs sm:text-sm text-accent font-extrabold uppercase tracking-wider">{leader.role}</div>
+                </div>
+                <p className="text-sm leading-relaxed text-ink-secondary">{leader.bio}</p>
               </div>
-              <p className="text-sm leading-relaxed text-ink-secondary">{leader.bio}</p>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Connect CTA */}

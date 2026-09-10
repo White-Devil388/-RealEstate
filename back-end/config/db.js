@@ -1,4 +1,15 @@
+import dns from 'dns';
 import mongoose from 'mongoose';
+
+// Ensure DNS resolution works reliably for MongoDB Atlas SRV URIs across all platforms/ISPs
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch (e) {
+  // Fallback if environment restricts setting custom DNS servers
+}
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first');
+}
 
 const connectDB = async () => {
   const mongoUri = process.env.MONGO_URI;
@@ -9,14 +20,13 @@ const connectDB = async () => {
 
   try {
     await mongoose.connect(mongoUri, {
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 10000,
       autoIndex: true
     });
 
-    console.log(`MongoDB connected: ${mongoose.connection.host}`);
+    console.log(`MongoDB Connected: ${mongoose.connection.host} (DB: ${mongoose.connection.name})`);
   } catch (error) {
-    console.warn('MongoDB connection failed. Continuing without database connection.');
-    console.warn(error.message);
+    console.warn('MongoDB connection failed:', error.message);
   }
 };
 

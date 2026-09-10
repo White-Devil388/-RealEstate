@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLead } from '../context/LeadContext';
 import { useProjects } from '../context/ProjectContext';
-import { BLOG_POSTS } from '../data/blogData';
-import { ACHIEVEMENT_IMAGES, ACHIEVEMENTS, COMPANY_STATS, CORE_VALUES, TESTIMONIALS } from '../data/companyData';
+import { useData } from '../context/DataContext';
 import {
   MapPin, Search, Calendar, ArrowRight, ShieldCheck,
   Compass, Send, Calculator, Quote, PhoneCall, X
@@ -14,6 +13,7 @@ import CounterNumber from '../components/common/CounterNumber';
 
 const HomePage = () => {
   const { projects } = useProjects();
+  const { blogs, companyData } = useData();
   const [isOpen, setIsOpen] = useState(false);
   const [isCallbackModalOpen, setIsCallbackModalOpen] = useState(false);
   const navigate = useNavigate();
@@ -21,6 +21,12 @@ const HomePage = () => {
     setCurrentPage, setActiveProjectModal, openSiteVisitForProject,
     setActiveBlogModal, submitLead,
   } = useLead();
+
+  const COMPANY_STATS = companyData.stats || [];
+  const ACHIEVEMENTS = companyData.achievements || [];
+  const ACHIEVEMENT_IMAGES = companyData.achievementImages || [];
+  const CORE_VALUES = companyData.coreValues || [];
+  const TESTIMONIALS = companyData.testimonials || [];
 
   const [searchLocation, setSearchLocation] = useState('All');
   const [searchCategory, setSearchCategory] = useState('All');
@@ -488,11 +494,11 @@ const HomePage = () => {
           variants={staggerContainer}
           className="grid grid-cols-1 md:grid-cols-3 gap-8"
         >
-          {BLOG_POSTS.slice(0, 3).map((post) => (
+          {blogs.slice(0, 3).map((post) => (
             <motion.article
               variants={fadeInUp}
               whileHover={{ y: -5 }}
-              key={post.id}
+              key={post.id || post._id}
               onClick={() => setActiveBlogModal(post)}
               className="glass-card h-full p-5 cursor-pointer group flex flex-col gap-4 transition-all duration-300"
             >
