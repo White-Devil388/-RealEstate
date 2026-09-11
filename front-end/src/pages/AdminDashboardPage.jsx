@@ -94,6 +94,7 @@ const AdminDashboardPage = () => {
   const [filterStatus, setFilterStatus] = useState('All');
   const [selectedLeadModal, setSelectedLeadModal] = useState(null);
   const [isAddLeadModalOpen, setIsAddLeadModalOpen] = useState(false);
+  const [editingLeadId, setEditingLeadId] = useState(null);
 
   // New Lead Form State
   const [newLeadData, setNewLeadData] = useState({
@@ -216,6 +217,8 @@ const AdminDashboardPage = () => {
   const visibleMedia = mediaItems.slice(0, mediaVisibleCount);
   const hasMoreMedia = mediaVisibleCount < mediaItems.length;
 
+  const brochureRequests = leads.filter((lead) => lead.type === 'Brochure Request');
+
   React.useEffect(() => {
     setLeadVisibleCount(LIST_PAGE_SIZE);
   }, [searchTerm, filterType, filterStatus]);
@@ -242,9 +245,50 @@ const AdminDashboardPage = () => {
       showToast('Please enter prospect name and phone number', 'error');
       return;
     }
-    await submitLead(newLeadData);
+
+    if (editingLeadId) {
+      setLeads((prev) =>
+        prev.map((lead) =>
+          lead.id === editingLeadId
+            ? {
+                ...lead,
+                name: newLeadData.name,
+                phone: newLeadData.phone,
+                email: newLeadData.email,
+                type: newLeadData.type,
+                projectName: newLeadData.projectName,
+                message: newLeadData.message,
+                notes: newLeadData.message || lead.notes,
+              }
+            : lead
+        )
+      );
+      showToast(`Lead #${editingLeadId} updated successfully.`, 'success');
+      setEditingLeadId(null);
+    } else {
+      await submitLead(newLeadData);
+    }
+
     setIsAddLeadModalOpen(false);
     setNewLeadData({ name: '', phone: '', email: '', type: 'Project Enquiry', projectName: projects[0]?.name || 'Skyline Heights 1', message: '' });
+  };
+
+  const handleEditLead = (lead) => {
+    setEditingLeadId(lead.id);
+    setNewLeadData({
+      name: lead.name || '',
+      phone: lead.phone || '',
+      email: lead.email || '',
+      type: lead.type || 'Project Enquiry',
+      projectName: lead.projectName || projects[0]?.name || 'Skyline Heights 1',
+      message: lead.message || lead.notes || ''
+    });
+    setIsAddLeadModalOpen(true);
+  };
+
+  const handleDeleteLead = (leadId) => {
+    setLeads((prev) => prev.filter((lead) => lead.id !== leadId));
+    showToast(`Lead #${leadId} deleted successfully.`, 'info');
   };
 
   // Project CRUD Handlers
@@ -1145,28 +1189,39 @@ const AdminDashboardPage = () => {
                               <span className="badge-gold text-[10px]">{lead.type}</span>
                             </td>
                             <td className="p-4 font-medium text-ink-secondary">{lead.projectName}</td>
-                            <td className="p-4">
-                              <span className={`px-2.5 py-1 rounded-full font-bold border ${getStatusBadgeClass(lead.status)} text-[10px]`}>
-                                {lead.status}
-                              </span>
-                            </td>
-                            <td className="p-4 text-center space-x-2">
+                            <td className="p-3">
                               <select
                                 value={lead.status}
                                 onChange={(e) => updateLeadStatus(lead.id, e.target.value)}
-                                className="bg-muted border border-accent/30 text-accent font-bold rounded-xl px-2.5 py-1 text-[11px] focus:outline-none cursor-pointer"
+                                className={`w-[118px] min-w-[118px] border rounded-lg px-1.5 py-1 text-[10px] font-bold text-center cursor-pointer shadow-sm focus:outline-none ${getStatusBadgeClass(lead.status)}`}
                               >
                                 {statuses.map((s) => (
                                   <option key={s} value={s}>{s}</option>
                                 ))}
                               </select>
-                              <button
-                                onClick={() => setSelectedLeadModal(lead)}
-                                className="p-1.5 rounded-lg bg-accent/15 text-accent hover:bg-accent hover:text-white transition-colors"
-                                title="View Details"
-                              >
-                                <Eye className="w-3.5 h-3.5" />
-                              </button>
+                            </td>
+                            <td className="p-3 text-center">
+                              <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
+                                <button
+                                  onClick={() => setSelectedLeadModal(lead)}
+                                  className="flex items-center justify-center w-7 h-7 rounded-md bg-accent/15 text-accent hover:bg-accent hover:text-white transition-colors"
+                                  title="View Details"
+                                >
+                                  <Eye className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => handleEditLead(lead)}
+                                  className="bg-accent/15 text-accent border border-accent/30 hover:bg-accent hover:text-white px-1.5 py-1 rounded-md text-[9px] font-bold transition-all leading-none"
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteLead(lead.id)}
+                                  className="bg-rose-500/15 text-rose-400 border border-rose-500/30 hover:bg-rose-600 hover:text-white px-1.5 py-1 rounded-md text-[9px] font-bold transition-all leading-none"
+                                >
+                                  Delete
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))
@@ -1939,28 +1994,33 @@ const AdminDashboardPage = () => {
 
                 <div className="glass-panel rounded-3xl border border-accent/35 bg-surface shadow-xl p-6">
                   <div className="space-y-4">
-                    {[
-                      { id: 'BR-101', name: 'Alok Roy', email: 'alok.roy@example.com', project: 'Skyline Heights 1', date: '2026-09-08' },
-                      { id: 'BR-102', name: 'Manish Soni', email: 'm.soni@example.com', project: 'Royal Courtyard 3', date: '2026-09-07' },
-                      { id: 'BR-103', name: 'Sanjay Jain', email: 'sanjay.jain@example.com', project: 'Emerald Residency 7', date: '2026-09-06' }
-                    ].map((b) => (
-                      <div key={b.id} className="p-4 rounded-2xl bg-muted/60 border border-accent/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs">
-                        <div className="space-y-1">
-                          <div className="font-bold text-ink flex items-center gap-2">
-                            <span>{b.name}</span>
-                            <span className="text-accent font-mono">({b.email})</span>
-                          </div>
-                          <div className="text-ink-secondary">Requested Brochure for <strong>{b.project}</strong> on {b.date}</div>
-                        </div>
-                        <button
-                          onClick={() => showToast(`Resent brochure link to ${b.email}`, 'success')}
-                          className="btn-gold text-[10px] py-1.5 px-3 flex items-center gap-1.5 self-start sm:self-auto"
-                        >
-                          <Download className="w-3 h-3" />
-                          <span>Resend Email</span>
-                        </button>
+                    {brochureRequests.length === 0 ? (
+                      <div className="p-8 rounded-2xl border border-dashed border-accent/25 bg-muted/40 text-center text-ink-muted text-xs">
+                        No brochure requests yet. Prospects who request e-brochures will appear here automatically.
                       </div>
-                    ))}
+                    ) : (
+                      brochureRequests.map((b) => (
+                        <div key={b.id} className="p-4 rounded-2xl bg-muted/60 border border-accent/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs">
+                          <div className="space-y-1">
+                            <div className="font-bold text-ink flex items-center gap-2 flex-wrap">
+                              <span>{b.name}</span>
+                              <span className="text-accent font-mono">({b.email || 'No email'})</span>
+                            </div>
+                            <div className="text-ink-secondary">
+                              Requested brochure for <strong>{b.projectName}</strong>
+                              {b.phone ? ` • ${b.phone}` : ''}
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => showToast(`Resent brochure link to ${b.email || 'the prospect'}`, 'success')}
+                            className="btn-gold text-[10px] py-1.5 px-3 flex items-center gap-1.5 self-start sm:self-auto"
+                          >
+                            <Download className="w-3 h-3" />
+                            <span>Resend Email</span>
+                          </button>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
               </motion.div>
@@ -2044,8 +2104,14 @@ const AdminDashboardPage = () => {
               className="glass-panel p-6 sm:p-8 rounded-3xl border border-accent/40 bg-surface shadow-2xl w-full max-w-lg space-y-5"
             >
               <div className="flex items-center justify-between border-b border-accent/20 pb-4">
-                <h3 className="font-heading text-lg font-bold text-ink">Log New Prospect Lead</h3>
-                <button onClick={() => setIsAddLeadModalOpen(false)} className="text-ink-muted hover:text-ink">
+                <h3 className="font-heading text-lg font-bold text-ink">
+                  {editingLeadId ? 'Edit Prospect Lead' : 'Log New Prospect Lead'}
+                </h3>
+                <button onClick={() => {
+                  setIsAddLeadModalOpen(false);
+                  setEditingLeadId(null);
+                  setNewLeadData({ name: '', phone: '', email: '', type: 'Project Enquiry', projectName: projects[0]?.name || 'Skyline Heights 1', message: '' });
+                }} className="text-ink-muted hover:text-ink">
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -2133,7 +2199,7 @@ const AdminDashboardPage = () => {
                     Cancel
                   </button>
                   <button type="submit" className="btn-gold text-xs py-2 px-5">
-                    Save Prospect Lead
+                    {editingLeadId ? 'Update Prospect Lead' : 'Save Prospect Lead'}
                   </button>
                 </div>
               </form>
