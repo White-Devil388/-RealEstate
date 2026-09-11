@@ -157,6 +157,13 @@ const AdminDashboardPage = () => {
   // Lead Status List & Classes
   const statuses = ['New', 'Contacted', 'Qualified', 'Site Visit Scheduled', 'Converted', 'Closed'];
   const leadTypes = ['All', 'Site Visit', 'Project Enquiry', 'Brochure Request', 'Contact Form', 'Career Application'];
+  const LIST_PAGE_SIZE = 6;
+
+  const [leadVisibleCount, setLeadVisibleCount] = useState(LIST_PAGE_SIZE);
+  const [projectVisibleCount, setProjectVisibleCount] = useState(LIST_PAGE_SIZE);
+  const [visitVisibleCount, setVisitVisibleCount] = useState(LIST_PAGE_SIZE);
+  const [blogVisibleCount, setBlogVisibleCount] = useState(LIST_PAGE_SIZE);
+  const [mediaVisibleCount, setMediaVisibleCount] = useState(LIST_PAGE_SIZE);
 
   const getStatusBadgeClass = (status) => {
     switch (status) {
@@ -185,12 +192,49 @@ const AdminDashboardPage = () => {
     return true;
   });
 
+  const visibleLeads = filteredLeads.slice(0, leadVisibleCount);
+  const hasMoreLeads = leadVisibleCount < filteredLeads.length;
+
   // Filtered Projects
   const filteredProjects = projects.filter((proj) => {
     if (projectCategoryFilter !== 'All' && proj.category !== projectCategoryFilter) return false;
     if (projectStatusFilter !== 'All' && proj.status !== projectStatusFilter) return false;
     return true;
   });
+
+  const visibleProjects = filteredProjects.slice(0, projectVisibleCount);
+  const hasMoreProjects = projectVisibleCount < filteredProjects.length;
+
+  const visibleVisits = mockVisits
+    .filter(v => visitStatusFilter === 'All' || v.status === visitStatusFilter)
+    .slice(0, visitVisibleCount);
+  const hasMoreVisits = visitVisibleCount < mockVisits.filter(v => visitStatusFilter === 'All' || v.status === visitStatusFilter).length;
+
+  const visibleBlogs = blogs.slice(0, blogVisibleCount);
+  const hasMoreBlogs = blogVisibleCount < blogs.length;
+
+  const visibleMedia = mediaItems.slice(0, mediaVisibleCount);
+  const hasMoreMedia = mediaVisibleCount < mediaItems.length;
+
+  React.useEffect(() => {
+    setLeadVisibleCount(LIST_PAGE_SIZE);
+  }, [searchTerm, filterType, filterStatus]);
+
+  React.useEffect(() => {
+    setProjectVisibleCount(LIST_PAGE_SIZE);
+  }, [projectCategoryFilter, projectStatusFilter]);
+
+  React.useEffect(() => {
+    setVisitVisibleCount(LIST_PAGE_SIZE);
+  }, [visitStatusFilter]);
+
+  React.useEffect(() => {
+    setBlogVisibleCount(LIST_PAGE_SIZE);
+  }, [blogs.length, activeTab]);
+
+  React.useEffect(() => {
+    setMediaVisibleCount(LIST_PAGE_SIZE);
+  }, [mediaItems.length, activeTab]);
 
   const handleCreateLeadSubmit = async (e) => {
     e.preventDefault();
@@ -1089,7 +1133,7 @@ const AdminDashboardPage = () => {
                           </td>
                         </tr>
                       ) : (
-                        filteredLeads.map((lead) => (
+                        visibleLeads.map((lead) => (
                           <tr key={lead.id} className="hover:bg-muted/70 transition-colors">
                             <td className="p-4 font-mono font-bold text-accent">{lead.id}</td>
                             <td className="p-4 font-bold text-ink">{lead.name}</td>
@@ -1129,6 +1173,24 @@ const AdminDashboardPage = () => {
                       )}
                     </tbody>
                   </table>
+
+                  {hasMoreLeads && (
+                    <div className="flex justify-center p-4 border-t border-accent/20">
+                      <button
+                        type="button"
+                        onClick={() => setLeadVisibleCount((prev) => Math.min(prev + LIST_PAGE_SIZE, filteredLeads.length))}
+                        className="btn-gold px-6 py-2 text-[11px] font-bold"
+                      >
+                        Load More Leads
+                      </button>
+                    </div>
+                  )}
+
+                  {!hasMoreLeads && filteredLeads.length > 0 && (
+                    <div className="text-center text-[11px] text-ink-muted pb-4">
+                      All leads loaded.
+                    </div>
+                  )}
                 </div>
 
               </motion.div>
@@ -1421,80 +1483,100 @@ const AdminDashboardPage = () => {
                       </button>
                     </div>
                   ) : (
-                    filteredProjects.map((project) => (
-                      <div key={project.id} className="glass-panel rounded-3xl border border-accent/35 overflow-hidden bg-surface shadow-lg flex flex-col justify-between group hover:border-accent transition-all">
-                        <div>
-                          <div className="relative h-48 overflow-hidden">
-                            <img
-                              src={project.heroImage}
-                              alt={project.name}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-dark/70 via-transparent to-transparent opacity-80" />
+                    <>
+                      {visibleProjects.map((project) => (
+                        <div key={project.id} className="glass-panel rounded-3xl border border-accent/35 overflow-hidden bg-surface shadow-lg flex flex-col justify-between group hover:border-accent transition-all">
+                          <div>
+                            <div className="relative h-48 overflow-hidden">
+                              <img
+                                src={project.heroImage}
+                                alt={project.name}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-dark/70 via-transparent to-transparent opacity-80" />
 
-                            <span className="absolute top-3 right-3 bg-background/90 text-accent border border-accent/40 text-[10px] font-extrabold px-3 py-1 rounded-full shadow-md backdrop-blur-md">
-                              {project.status}
-                            </span>
+                              <span className="absolute top-3 right-3 bg-background/90 text-accent border border-accent/40 text-[10px] font-extrabold px-3 py-1 rounded-full shadow-md backdrop-blur-md">
+                                {project.status}
+                              </span>
 
-                            <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs text-white">
-                              <span className="badge-gold text-[10px]">{project.category}</span>
+                              <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs text-white">
+                                <span className="badge-gold text-[10px]">{project.category}</span>
+                              </div>
+                            </div>
+
+                            <div className="p-5 space-y-3">
+                              <div className="space-y-1">
+                                <h3 className="font-heading text-lg font-bold text-ink group-hover:text-accent transition-colors">{project.name}</h3>
+                                <p className="text-ink-secondary text-xs flex items-center gap-1">
+                                  <MapPin className="w-3.5 h-3.5 text-accent shrink-0" />
+                                  <span>{project.location}, {project.city}</span>
+                                </p>
+                              </div>
+
+                              <div className="bg-muted/70 p-3 rounded-2xl border border-accent/15 space-y-1.5 text-xs">
+                                <div className="flex justify-between font-medium">
+                                  <span className="text-ink-muted">Total Units:</span>
+                                  <span className="font-bold text-ink">{project.specifications?.totalUnits || '120'}</span>
+                                </div>
+                                <div className="flex justify-between font-medium">
+                                  <span className="text-ink-muted">Configurations:</span>
+                                  <span className="font-bold text-ink">{project.specifications?.configurations || '2 & 3 BHK'}</span>
+                                </div>
+                                <div className="flex justify-between font-medium">
+                                  <span className="text-ink-muted">Pricing Band:</span>
+                                  <span className="font-extrabold text-accent">{project.price}</span>
+                                </div>
+                              </div>
                             </div>
                           </div>
 
-                          <div className="p-5 space-y-3">
-                            <div className="space-y-1">
-                              <h3 className="font-heading text-lg font-bold text-ink group-hover:text-accent transition-colors">{project.name}</h3>
-                              <p className="text-ink-secondary text-xs flex items-center gap-1">
-                                <MapPin className="w-3.5 h-3.5 text-accent shrink-0" />
-                                <span>{project.location}, {project.city}</span>
-                              </p>
-                            </div>
-
-                            <div className="bg-muted/70 p-3 rounded-2xl border border-accent/15 space-y-1.5 text-xs">
-                              <div className="flex justify-between font-medium">
-                                <span className="text-ink-muted">Total Units:</span>
-                                <span className="font-bold text-ink">{project.specifications?.totalUnits || '120'}</span>
-                              </div>
-                              <div className="flex justify-between font-medium">
-                                <span className="text-ink-muted">Configurations:</span>
-                                <span className="font-bold text-ink">{project.specifications?.configurations || '2 & 3 BHK'}</span>
-                              </div>
-                              <div className="flex justify-between font-medium">
-                                <span className="text-ink-muted">Pricing Band:</span>
-                                <span className="font-extrabold text-accent">{project.price}</span>
-                              </div>
+                          <div className="p-5 pt-0 space-y-2">
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => setSelectedProjectModal(project)}
+                                className="btn-secondary flex-1 text-xs py-2 text-center font-semibold"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                                <span>View</span>
+                              </button>
+                              <button
+                                onClick={() => handleOpenEditProjectModal(project)}
+                                className="bg-accent/15 text-accent border border-accent/30 hover:bg-accent hover:text-white px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                                title="Edit Property"
+                              >
+                                <Edit className="w-3.5 h-3.5" />
+                                <span>Edit</span>
+                              </button>
+                              <button
+                                onClick={() => setDeletingProjectId(project.id)}
+                                className="bg-rose-500/15 text-rose-400 border border-rose-500/30 hover:bg-rose-600 hover:text-white px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                                title="Delete Property"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
                             </div>
                           </div>
                         </div>
+                      ))}
 
-                        <div className="p-5 pt-0 space-y-2">
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => setSelectedProjectModal(project)}
-                              className="btn-secondary flex-1 text-xs py-2 text-center font-semibold"
-                            >
-                              <Eye className="w-3.5 h-3.5" />
-                              <span>View</span>
-                            </button>
-                            <button
-                              onClick={() => handleOpenEditProjectModal(project)}
-                              className="bg-accent/15 text-accent border border-accent/30 hover:bg-accent hover:text-white px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
-                              title="Edit Property"
-                            >
-                              <Edit className="w-3.5 h-3.5" />
-                              <span>Edit</span>
-                            </button>
-                            <button
-                              onClick={() => setDeletingProjectId(project.id)}
-                              className="bg-rose-500/15 text-rose-400 border border-rose-500/30 hover:bg-rose-600 hover:text-white px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
-                              title="Delete Property"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
+                      {hasMoreProjects && (
+                        <div className="col-span-full flex justify-center pt-2">
+                          <button
+                            type="button"
+                            onClick={() => setProjectVisibleCount((prev) => Math.min(prev + LIST_PAGE_SIZE, filteredProjects.length))}
+                            className="btn-gold px-6 py-2 text-[11px] font-bold"
+                          >
+                            Load More Projects
+                          </button>
                         </div>
-                      </div>
-                    ))
+                      )}
+
+                      {!hasMoreProjects && filteredProjects.length > 0 && (
+                        <div className="col-span-full text-center text-[11px] text-ink-muted pt-2">
+                          All projects loaded.
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
 
@@ -1538,46 +1620,62 @@ const AdminDashboardPage = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-accent/15">
-                      {mockVisits
-                        .filter(v => visitStatusFilter === 'All' || v.status === visitStatusFilter)
-                        .map((visit) => (
-                          <tr key={visit.id} className="hover:bg-muted/70 transition-colors">
-                            <td className="p-4 font-mono font-bold text-accent">{visit.id}</td>
-                            <td className="p-4 font-bold text-ink">{visit.name}</td>
-                            <td className="p-4 font-medium text-ink-secondary">{visit.project}</td>
-                            <td className="p-4 text-ink-secondary font-mono">{visit.date} ({visit.time})</td>
-                            <td className="p-4">
-                              {visit.cabNeeded ? (
-                                <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] px-2 py-0.5 rounded-full font-bold">Cab Requested</span>
-                              ) : (
-                                <span className="text-ink-muted">Self Driving</span>
-                              )}
-                            </td>
-                            <td className="p-4 font-semibold text-accent">{visit.executive}</td>
-                            <td className="p-4">
-                              <span className={`px-2.5 py-1 rounded-full font-bold border text-[10px] ${
-                                visit.status === 'Confirmed' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
-                                visit.status === 'Pending' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
-                                'bg-gray-500/20 text-gray-300 border-gray-500/30'
-                              }`}>
-                                {visit.status}
-                              </span>
-                            </td>
-                            <td className="p-4 text-center">
-                              <select
-                                value={visit.status}
-                                onChange={(e) => handleVisitStatusChange(visit.id, e.target.value)}
-                                className="bg-muted border border-accent/30 text-accent font-bold rounded-xl px-2 py-1 text-[11px] focus:outline-none cursor-pointer"
-                              >
-                                <option value="Pending">Pending</option>
-                                <option value="Confirmed">Confirmed</option>
-                                <option value="Completed">Completed</option>
-                              </select>
-                            </td>
-                          </tr>
-                        ))}
+                      {visibleVisits.map((visit) => (
+                        <tr key={visit.id} className="hover:bg-muted/70 transition-colors">
+                          <td className="p-4 font-mono font-bold text-accent">{visit.id}</td>
+                          <td className="p-4 font-bold text-ink">{visit.name}</td>
+                          <td className="p-4 font-medium text-ink-secondary">{visit.project}</td>
+                          <td className="p-4 text-ink-secondary font-mono">{visit.date} ({visit.time})</td>
+                          <td className="p-4">
+                            {visit.cabNeeded ? (
+                              <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] px-2 py-0.5 rounded-full font-bold">Cab Requested</span>
+                            ) : (
+                              <span className="text-ink-muted">Self Driving</span>
+                            )}
+                          </td>
+                          <td className="p-4 font-semibold text-accent">{visit.executive}</td>
+                          <td className="p-4">
+                            <span className={`px-2.5 py-1 rounded-full font-bold border text-[10px] ${
+                              visit.status === 'Confirmed' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
+                              visit.status === 'Pending' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
+                              'bg-gray-500/20 text-gray-300 border-gray-500/30'
+                            }`}>
+                              {visit.status}
+                            </span>
+                          </td>
+                          <td className="p-4 text-center">
+                            <select
+                              value={visit.status}
+                              onChange={(e) => handleVisitStatusChange(visit.id, e.target.value)}
+                              className="bg-muted border border-accent/30 text-accent font-bold rounded-xl px-2 py-1 text-[11px] focus:outline-none cursor-pointer"
+                            >
+                              <option value="Pending">Pending</option>
+                              <option value="Confirmed">Confirmed</option>
+                              <option value="Completed">Completed</option>
+                            </select>
+                          </td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
+
+                  {hasMoreVisits && (
+                    <div className="flex justify-center p-4 border-t border-accent/20">
+                      <button
+                        type="button"
+                        onClick={() => setVisitVisibleCount((prev) => Math.min(prev + LIST_PAGE_SIZE, mockVisits.filter(v => visitStatusFilter === 'All' || v.status === visitStatusFilter).length))}
+                        className="btn-gold px-6 py-2 text-[11px] font-bold"
+                      >
+                        Load More Visits
+                      </button>
+                    </div>
+                  )}
+
+                  {!hasMoreVisits && mockVisits.filter(v => visitStatusFilter === 'All' || v.status === visitStatusFilter).length > 0 && (
+                    <div className="text-center text-[11px] text-ink-muted pb-4">
+                      All visits loaded.
+                    </div>
+                  )}
                 </div>
 
               </motion.div>
@@ -1666,57 +1764,77 @@ const AdminDashboardPage = () => {
                       <p className="text-xs text-ink-muted mt-2">Create the first real estate trend article to appear on the homepage.</p>
                     </div>
                   ) : (
-                    blogs.map((blog) => (
-                      <div key={blog.id || blog._id} className="glass-panel rounded-3xl border border-accent/35 bg-surface shadow-xl overflow-hidden">
-                        <div className="md:flex">
-                          <img src={blog.featuredImage} alt={blog.title} className="w-full md:w-64 h-52 md:h-auto object-cover" />
-                          <div className="flex-1 p-5 space-y-4">
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                              <div className="space-y-1">
-                                <span className="badge-gold text-[10px]">{blog.category || 'Real Estate Trends'}</span>
-                                <h3 className="font-heading text-xl font-bold text-ink">{blog.title}</h3>
+                    <>
+                      {visibleBlogs.map((blog) => (
+                        <div key={blog.id || blog._id} className="glass-panel rounded-3xl border border-accent/35 bg-surface shadow-xl overflow-hidden">
+                          <div className="md:flex">
+                            <img src={blog.featuredImage} alt={blog.title} className="w-full md:w-64 h-52 md:h-auto object-cover" />
+                            <div className="flex-1 p-5 space-y-4">
+                              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                <div className="space-y-1">
+                                  <span className="badge-gold text-[10px]">{blog.category || 'Real Estate Trends'}</span>
+                                  <h3 className="font-heading text-xl font-bold text-ink">{blog.title}</h3>
+                                </div>
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <button
+                                    onClick={() => handleOpenEditBlogModal(blog)}
+                                    className="bg-accent/15 text-accent border border-accent/30 hover:bg-accent hover:text-white px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1"
+                                    title="Edit insight"
+                                  >
+                                    <Edit className="w-3.5 h-3.5" />
+                                    <span>Edit</span>
+                                  </button>
+                                  <button
+                                    onClick={() => setDeletingBlogId(blog.id || blog._id)}
+                                    className="bg-rose-500/15 text-rose-400 border border-rose-500/30 hover:bg-rose-600 hover:text-white px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1"
+                                    title="Delete insight"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                    <span>Delete</span>
+                                  </button>
+                                </div>
                               </div>
-                              <div className="flex items-center gap-2 shrink-0">
-                                <button
-                                  onClick={() => handleOpenEditBlogModal(blog)}
-                                  className="bg-accent/15 text-accent border border-accent/30 hover:bg-accent hover:text-white px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1"
-                                  title="Edit insight"
-                                >
-                                  <Edit className="w-3.5 h-3.5" />
-                                  <span>Edit</span>
-                                </button>
-                                <button
-                                  onClick={() => setDeletingBlogId(blog.id || blog._id)}
-                                  className="bg-rose-500/15 text-rose-400 border border-rose-500/30 hover:bg-rose-600 hover:text-white px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1"
-                                  title="Delete insight"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                  <span>Delete</span>
-                                </button>
+
+                              <div className="flex flex-wrap items-center gap-3 text-[11px] text-ink-muted font-mono uppercase tracking-wide">
+                                <span>{blog.date}</span>
+                                <span>•</span>
+                                <span>{blog.readTime}</span>
+                                <span>•</span>
+                                <span>{blog.author}</span>
                               </div>
-                            </div>
 
-                            <div className="flex flex-wrap items-center gap-3 text-[11px] text-ink-muted font-mono uppercase tracking-wide">
-                              <span>{blog.date}</span>
-                              <span>•</span>
-                              <span>{blog.readTime}</span>
-                              <span>•</span>
-                              <span>{blog.author}</span>
-                            </div>
+                              <p className="text-sm text-ink-secondary leading-relaxed">{blog.excerpt || blog.content?.slice(0, 180)}</p>
 
-                            <p className="text-sm text-ink-secondary leading-relaxed">{blog.excerpt || blog.content?.slice(0, 180)}</p>
-
-                            <div className="flex flex-wrap gap-2">
-                              {(blog.tags || []).slice(0, 4).map((tag) => (
-                                <span key={tag} className="px-2 py-1 rounded-full bg-muted text-ink-secondary text-[10px] font-semibold border border-accent/20">
-                                  {tag}
-                                </span>
-                              ))}
+                              <div className="flex flex-wrap gap-2">
+                                {(blog.tags || []).slice(0, 4).map((tag) => (
+                                  <span key={tag} className="px-2 py-1 rounded-full bg-muted text-ink-secondary text-[10px] font-semibold border border-accent/20">
+                                    {tag}
+                                  </span>
+                                ))}
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    ))
+                      ))}
+
+                      {hasMoreBlogs && (
+                        <div className="flex justify-center pt-2">
+                          <button
+                            type="button"
+                            onClick={() => setBlogVisibleCount((prev) => Math.min(prev + LIST_PAGE_SIZE, blogs.length))}
+                            className="btn-gold px-6 py-2 text-[11px] font-bold"
+                          >
+                            Load More Insights
+                          </button>
+                        </div>
+                      )}
+
+                      {!hasMoreBlogs && blogs.length > 0 && (
+                        <div className="text-center text-[11px] text-ink-muted pt-2">
+                          All insights loaded.
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </motion.div>
@@ -1745,47 +1863,67 @@ const AdminDashboardPage = () => {
                       <p className="text-xs text-ink-muted mt-2">Upload the first visual or video to populate the gallery.</p>
                     </div>
                   ) : (
-                    mediaItems.map((item) => (
-                      <div key={item.id || item._id} className="glass-panel rounded-3xl border border-accent/35 bg-surface shadow-xl overflow-hidden">
-                        <div className="md:flex">
-                          <img src={item.url} alt={item.title} className="w-full md:w-64 h-52 md:h-auto object-cover" />
-                          <div className="flex-1 p-5 space-y-4">
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                              <div className="space-y-1">
-                                <span className="badge-gold text-[10px]">{item.category || 'Project Images'}</span>
-                                <h3 className="font-heading text-xl font-bold text-ink">{item.title}</h3>
+                    <>
+                      {visibleMedia.map((item) => (
+                        <div key={item.id || item._id} className="glass-panel rounded-3xl border border-accent/35 bg-surface shadow-xl overflow-hidden">
+                          <div className="md:flex">
+                            <img src={item.url} alt={item.title} className="w-full md:w-64 h-52 md:h-auto object-cover" />
+                            <div className="flex-1 p-5 space-y-4">
+                              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                <div className="space-y-1">
+                                  <span className="badge-gold text-[10px]">{item.category || 'Project Images'}</span>
+                                  <h3 className="font-heading text-xl font-bold text-ink">{item.title}</h3>
+                                </div>
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <button
+                                    onClick={() => handleOpenEditMediaModal(item)}
+                                    className="bg-accent/15 text-accent border border-accent/30 hover:bg-accent hover:text-white px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1"
+                                    title="Edit media"
+                                  >
+                                    <Edit className="w-3.5 h-3.5" />
+                                    <span>Edit</span>
+                                  </button>
+                                  <button
+                                    onClick={() => setDeletingMediaId(item.id || item._id)}
+                                    className="bg-rose-500/15 text-rose-400 border border-rose-500/30 hover:bg-rose-600 hover:text-white px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1"
+                                    title="Delete media"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                    <span>Delete</span>
+                                  </button>
+                                </div>
                               </div>
-                              <div className="flex items-center gap-2 shrink-0">
-                                <button
-                                  onClick={() => handleOpenEditMediaModal(item)}
-                                  className="bg-accent/15 text-accent border border-accent/30 hover:bg-accent hover:text-white px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1"
-                                  title="Edit media"
-                                >
-                                  <Edit className="w-3.5 h-3.5" />
-                                  <span>Edit</span>
-                                </button>
-                                <button
-                                  onClick={() => setDeletingMediaId(item.id || item._id)}
-                                  className="bg-rose-500/15 text-rose-400 border border-rose-500/30 hover:bg-rose-600 hover:text-white px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1"
-                                  title="Delete media"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                  <span>Delete</span>
-                                </button>
+
+                              <div className="flex flex-wrap items-center gap-3 text-[11px] text-ink-muted font-mono uppercase tracking-wide">
+                                <span>{item.date}</span>
+                                <span>•</span>
+                                <span>{item.type === 'video' ? 'Video' : 'Image'}</span>
                               </div>
-                            </div>
 
-                            <div className="flex flex-wrap items-center gap-3 text-[11px] text-ink-muted font-mono uppercase tracking-wide">
-                              <span>{item.date}</span>
-                              <span>•</span>
-                              <span>{item.type === 'video' ? 'Video' : 'Image'}</span>
+                              <p className="text-sm text-ink-secondary leading-relaxed">{item.caption || 'No caption provided yet.'}</p>
                             </div>
-
-                            <p className="text-sm text-ink-secondary leading-relaxed">{item.caption || 'No caption provided yet.'}</p>
                           </div>
                         </div>
-                      </div>
-                    ))
+                      ))}
+
+                      {hasMoreMedia && (
+                        <div className="flex justify-center pt-2">
+                          <button
+                            type="button"
+                            onClick={() => setMediaVisibleCount((prev) => Math.min(prev + LIST_PAGE_SIZE, mediaItems.length))}
+                            className="btn-gold px-6 py-2 text-[11px] font-bold"
+                          >
+                            Load More Media
+                          </button>
+                        </div>
+                      )}
+
+                      {!hasMoreMedia && mediaItems.length > 0 && (
+                        <div className="text-center text-[11px] text-ink-muted pt-2">
+                          All media loaded.
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </motion.div>

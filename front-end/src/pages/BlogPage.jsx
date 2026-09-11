@@ -10,6 +10,8 @@ const BlogPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCat, setSelectedCat] = useState('All');
   const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [visibleCount, setVisibleCount] = useState(6);
+  const PAGE_SIZE = 6;
 
   const categories = ['All', ...(companyData.blogCategories && companyData.blogCategories.length > 0 ? companyData.blogCategories : ['Real Estate Trends', 'Legal & RERA', 'Investment Guides', 'Architecture & Design'])];
 
@@ -22,6 +24,13 @@ const BlogPage = () => {
     }
     return true;
   });
+
+  const visiblePosts = filteredPosts.slice(0, visibleCount);
+  const hasMorePosts = visibleCount < filteredPosts.length;
+
+  React.useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [searchTerm, selectedCat]);
 
   const featuredPost = blogs.find((p) => p.featured) || blogs[0];
 
@@ -126,7 +135,7 @@ const BlogPage = () => {
 
           {/* Articles Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-10">
-            {filteredPosts.map((post) => (
+            {visiblePosts.map((post) => (
               <div
                 key={post.id || post._id}
                 onClick={() => setActiveBlogModal(post)}
@@ -160,6 +169,24 @@ const BlogPage = () => {
             {filteredPosts.length === 0 && (
               <div className="col-span-3 text-center py-16 text-ink-muted">
                 No articles found matching your search.
+              </div>
+            )}
+
+            {hasMorePosts && (
+              <div className="col-span-full flex justify-center pt-4">
+                <button
+                  type="button"
+                  onClick={() => setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, filteredPosts.length))}
+                  className="btn-gold px-7 py-3 text-sm font-bold"
+                >
+                  Load More Articles
+                </button>
+              </div>
+            )}
+
+            {!hasMorePosts && filteredPosts.length > 0 && (
+              <div className="col-span-full text-center text-sm text-ink-muted pt-2">
+                All articles loaded.
               </div>
             )}
           </div>

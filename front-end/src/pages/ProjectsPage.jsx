@@ -16,12 +16,18 @@ const ProjectsPage = () => {
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'All');
   const [selectedStatus, setSelectedStatus] = useState(searchParams.get('status') || 'All');
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'map'
+  const [visibleCount, setVisibleCount] = useState(6);
+  const PAGE_SIZE = 6;
 
   useEffect(() => {
     setSelectedLocation(searchParams.get('city') || 'All');
     setSelectedCategory(searchParams.get('category') || 'All');
     setSelectedStatus(searchParams.get('status') || 'All');
   }, [searchParams]);
+
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [searchTerm, selectedLocation, selectedCategory, selectedStatus]);
 
   const locationOptions = ['All', ...new Set(projects.map((project) => project.city).filter(Boolean))];
   const categoryOptions = ['All', ...(companyData.projectCategories && companyData.projectCategories.length > 0
@@ -54,6 +60,9 @@ const ProjectsPage = () => {
     }
     return true;
   });
+
+  const visibleProjects = filteredProjects.slice(0, visibleCount);
+  const hasMoreProjects = visibleCount < filteredProjects.length;
 
   return (
     <div className="page-inner">
@@ -225,90 +234,110 @@ const ProjectsPage = () => {
                 </button>
               </div>
             ) : (
-              filteredProjects.map((project) => (
-                <div key={project.id} className="glass-card overflow-hidden flex flex-col group border border-accent/20 hover:border-accent/60 bg-surface">
-                  <div className="relative h-72 overflow-hidden">
-                    <img
-                      src={project.heroImage}
-                      alt={project.name}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-dark via-dark/30 to-transparent opacity-90" />
+              <>
+                {visibleProjects.map((project) => (
+                  <div key={project.id} className="glass-card overflow-hidden flex flex-col group border border-accent/20 hover:border-accent/60 bg-surface">
+                    <div className="relative h-72 overflow-hidden">
+                      <img
+                        src={project.heroImage}
+                        alt={project.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-dark via-dark/30 to-transparent opacity-90" />
 
-                    <div className="absolute top-4 left-4 flex flex-wrap gap-2">
-                      <span className="badge-gold text-xs">{project.category}</span>
-                      <span className={`badge-status ${
-                        project.status === 'Ready to Move' ? 'status-ready' : 'status-ongoing'
-                      }`}>
-                        {project.status}
-                      </span>
+                      <div className="absolute top-4 left-4 flex flex-wrap gap-2">
+                        <span className="badge-gold text-xs">{project.category}</span>
+                        <span className={`badge-status ${
+                          project.status === 'Ready to Move' ? 'status-ready' : 'status-ongoing'
+                        }`}>
+                          {project.status}
+                        </span>
+                      </div>
+
+                      <div className="absolute bottom-4 left-5 right-5 flex items-center justify-between text-xs text-ink font-semibold">
+                        <div className="flex items-center gap-1.5 bg-muted/85 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-accent/30">
+                          <MapPin className="w-3.5 h-3.5 text-accent" />
+                          <span>{project.location}, {project.city}</span>
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="absolute bottom-4 left-5 right-5 flex items-center justify-between text-xs text-ink font-semibold">
-                      <div className="flex items-center gap-1.5 bg-muted/85 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-accent/30">
-                        <MapPin className="w-3.5 h-3.5 text-accent" />
-                        <span>{project.location}, {project.city}</span>
+                    <div className="p-8 flex-1 flex flex-col justify-between space-y-6">
+                      <div className="space-y-3">
+                        <h3 className="font-heading text-2xl font-bold text-ink group-hover:text-accent transition-colors leading-tight">
+                          {project.name}
+                        </h3>
+                        <p className="text-sm text-ink-secondary leading-relaxed">
+                          {project.shortDesc || 'Premium residential development designed for modern urban living and long-term value.'}
+                        </p>
+                      </div>
+
+                      <div className="border-t border-accent/20 pt-5 space-y-4">
+                        <div className="rounded-2xl bg-muted/70 border border-accent/15 p-3 space-y-2 text-xs">
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="text-ink-muted uppercase tracking-wide font-bold">Configurations</span>
+                            <span className="font-extrabold text-ink text-right">
+                              {project.specifications?.configurations || project.configurations || '2 & 3 BHK'}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="text-ink-muted uppercase tracking-wide font-bold">Units</span>
+                            <span className="font-semibold text-ink text-right">
+                              {project.specifications?.totalUnits || project.totalUnits || '120 Units'}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="text-ink-muted uppercase tracking-wide font-bold">Possession</span>
+                            <span className="font-semibold text-ink text-right">
+                              {project.specifications?.possession || project.possession || '2027'}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <div className="text-xs uppercase text-ink-muted font-bold tracking-wider">Price Band</div>
+                          <div className="text-base font-extrabold text-accent">{project.price}</div>
+                        </div>
+
+                        <div className="flex items-center gap-3 pt-1">
+                          <button
+                            onClick={() => setActiveProjectModal(project)}
+                            className="btn-secondary flex-1 text-xs py-3 font-semibold"
+                          >
+                            <span>View Details</span>
+                          </button>
+
+                          <button
+                            onClick={() => openSiteVisitForProject(project)}
+                            className="btn-gold flex-1 text-xs py-3 font-bold"
+                          >
+                            <Calendar className="w-3.5 h-3.5" />
+                            <span>Book Visit</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
+                ))}
 
-                  <div className="p-8 flex-1 flex flex-col justify-between space-y-6">
-                    <div className="space-y-3">
-                      <h3 className="font-heading text-2xl font-bold text-ink group-hover:text-accent transition-colors leading-tight">
-                        {project.name}
-                      </h3>
-                      <p className="text-sm text-ink-secondary leading-relaxed">
-                        {project.shortDesc || 'Premium residential development designed for modern urban living and long-term value.'}
-                      </p>
-                    </div>
-
-                    <div className="border-t border-accent/20 pt-5 space-y-4">
-                      <div className="rounded-2xl bg-muted/70 border border-accent/15 p-3 space-y-2 text-xs">
-                        <div className="flex items-center justify-between gap-3">
-                          <span className="text-ink-muted uppercase tracking-wide font-bold">Configurations</span>
-                          <span className="font-extrabold text-ink text-right">
-                            {project.specifications?.configurations || project.configurations || '2 & 3 BHK'}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between gap-3">
-                          <span className="text-ink-muted uppercase tracking-wide font-bold">Units</span>
-                          <span className="font-semibold text-ink text-right">
-                            {project.specifications?.totalUnits || project.totalUnits || '120 Units'}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between gap-3">
-                          <span className="text-ink-muted uppercase tracking-wide font-bold">Possession</span>
-                          <span className="font-semibold text-ink text-right">
-                            {project.specifications?.possession || project.possession || '2027'}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div className="text-xs uppercase text-ink-muted font-bold tracking-wider">Price Band</div>
-                        <div className="text-base font-extrabold text-accent">{project.price}</div>
-                      </div>
-
-                      <div className="flex items-center gap-3 pt-1">
-                        <button
-                          onClick={() => setActiveProjectModal(project)}
-                          className="btn-secondary flex-1 text-xs py-3 font-semibold"
-                        >
-                          <span>View Details</span>
-                        </button>
-
-                        <button
-                          onClick={() => openSiteVisitForProject(project)}
-                          className="btn-gold flex-1 text-xs py-3 font-bold"
-                        >
-                          <Calendar className="w-3.5 h-3.5" />
-                          <span>Book Visit</span>
-                        </button>
-                      </div>
-                    </div>
+                {hasMoreProjects && (
+                  <div className="col-span-full flex justify-center pt-4">
+                    <button
+                      type="button"
+                      onClick={() => setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, filteredProjects.length))}
+                      className="btn-gold px-7 py-3 text-sm font-bold"
+                    >
+                      Load More Projects
+                    </button>
                   </div>
-                </div>
-              ))
+                )}
+
+                {!hasMoreProjects && filteredProjects.length > 0 && (
+                  <div className="col-span-full text-center text-sm text-ink-muted pt-2">
+                    All projects loaded.
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}

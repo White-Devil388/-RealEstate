@@ -8,12 +8,21 @@ const MediaPage = () => {
   const { mediaItems, mediaLoading, companyData } = useData();
 
   const [selectedCat, setSelectedCat] = useState('All');
+  const [visibleCount, setVisibleCount] = useState(6);
+  const PAGE_SIZE = 6;
 
   const categories = ['All', ...(companyData.mediaCategories && companyData.mediaCategories.length > 0 ? companyData.mediaCategories : ['Project Images', 'Videos', 'Events', 'Company Activities', 'News & Press'])];
 
   const filteredMedia = selectedCat === 'All' 
     ? mediaItems 
     : mediaItems.filter((item) => item.category === selectedCat);
+
+  const visibleMedia = filteredMedia.slice(0, visibleCount);
+  const hasMoreMedia = visibleCount < filteredMedia.length;
+
+  React.useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [selectedCat]);
 
   return (
     <div className="page-inner">
@@ -62,7 +71,7 @@ const MediaPage = () => {
       {!mediaLoading && (
         <section className="container-custom">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10">
-            {filteredMedia.map((item) => (
+            {visibleMedia.map((item) => (
               <div
                 key={item.id || item._id}
                 onClick={() => setActiveLightboxMedia(item)}
@@ -106,6 +115,24 @@ const MediaPage = () => {
             {filteredMedia.length === 0 && (
               <div className="col-span-3 text-center py-16 text-ink-muted">
                 No media items in this category.
+              </div>
+            )}
+
+            {hasMoreMedia && (
+              <div className="col-span-full flex justify-center pt-4">
+                <button
+                  type="button"
+                  onClick={() => setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, filteredMedia.length))}
+                  className="btn-gold px-7 py-3 text-sm font-bold"
+                >
+                  Load More Media
+                </button>
+              </div>
+            )}
+
+            {!hasMoreMedia && filteredMedia.length > 0 && (
+              <div className="col-span-full text-center text-sm text-ink-muted pt-2">
+                All media loaded.
               </div>
             )}
           </div>
