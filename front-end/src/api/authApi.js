@@ -1,16 +1,21 @@
-import axios from 'axios';
-
-const authApi = axios.create({
-  baseURL: '/api/auth',
-  headers: { 'Content-Type': 'application/json' }
-});
+import http from './http';
 
 export const loginUser = async (credentials) => {
-  const response = await authApi.post('/login', credentials);
+  const response = await http.post('/auth/login', credentials);
+  return response.data;
+};
+
+export const loginAdmin = async (credentials) => {
+  const response = await http.post('/auth/admin-login', credentials);
   return response.data;
 };
 
 export const signupUser = async (details) => {
-  const response = await authApi.post('/signup', details);
+  const response = await http.post('/auth/signup', details);
+  return response.data;
+};
+
+export const fetchCurrentUser = async () => {
+  const response = await http.get('/auth/me');
   return response.data;
 };

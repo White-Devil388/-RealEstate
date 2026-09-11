@@ -1,6 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import Career from '../models/Career.js';
+import { requireAdmin } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
@@ -22,7 +23,7 @@ router.get('/', async (_req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', requireAdmin, async (req, res) => {
   try {
     const careerData = req.body || {};
     const newId = careerData.id || `job-${Date.now()}`;
@@ -45,7 +46,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const updatedFields = req.body || {};
@@ -76,7 +77,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
 

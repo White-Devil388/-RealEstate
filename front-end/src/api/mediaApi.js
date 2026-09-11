@@ -1,26 +1,21 @@
-import axios from 'axios';
-
-const api = axios.create({
-  baseURL: '/api',
-  headers: { 'Content-Type': 'application/json' }
-});
+import http from './http';
 
 export const getMedia = async () => {
-  const response = await api.get('/media');
+  const response = await http.get('/media');
   return response.data;
 };
 
 export const createMediaApi = async (mediaData) => {
-  const response = await api.post('/media', mediaData);
+  const response = await http.post('/media', mediaData);
   return response.data;
 };
 
 export const updateMediaApi = async (id, updatedFields) => {
-  const response = await api.put(`/media/${id}`, updatedFields);
+  const response = await http.put(`/media/${id}`, updatedFields);
   return response.data;
 };
 
 export const deleteMediaApi = async (id) => {
-  const response = await api.delete(`/media/${id}`);
+  const response = await http.delete(`/media/${id}`);
   return response.data;
 };

@@ -49,7 +49,23 @@ const companySchema = new mongoose.Schema(
         q: String,
         a: String
       }
-    ]
+    ],
+    blogCategories: {
+      type: [String],
+      default: ['Real Estate Trends', 'Legal & RERA', 'Investment Guides', 'Architecture & Design']
+    },
+    mediaCategories: {
+      type: [String],
+      default: ['Project Images', 'Videos', 'Events', 'Company Activities', 'News & Press']
+    },
+    projectCategories: {
+      type: [String],
+      default: ['Premium Apartments', 'Affordable Housing', 'Luxury Villas', 'Premium Township', 'Commercial Complex', 'Residential Plots']
+    },
+    projectStatuses: {
+      type: [String],
+      default: ['Ready to Move', 'Under Construction', 'Launching Soon']
+    }
   },
   {
     timestamps: true

@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
 import { useLead } from '../context/LeadContext';
 import { useProjects } from '../context/ProjectContext';
+import { useAuth } from '../context/AuthContext';
+import { useData } from '../context/DataContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { updateCompanyInfo } from '../api/companyApi';
+import { createBlogApi, updateBlogApi, deleteBlogApi } from '../api/blogApi';
+import { createMediaApi, updateMediaApi, deleteMediaApi } from '../api/mediaApi';
 import {
   ShieldCheck,
   LayoutDashboard,
@@ -25,7 +30,6 @@ import {
   ChevronRight,
   Download,
   BellRing,
-  Sparkles,
   UserCheck,
   Building,
   DollarSign,
@@ -33,13 +37,56 @@ import {
   Edit,
   Trash2,
   RotateCcw,
-  Upload
+  Upload,
+  LogOut,
+  MessageSquareQuote
 } from 'lucide-react';
 
 const AdminDashboardPage = () => {
   const { leads, updateLeadStatus, submitLead, showToast } = useLead();
   const { projects, addProject, updateProject, deleteProject, resetProjects } = useProjects();
+  const { user, logout } = useAuth();
+  const { blogs, setBlogs, companyData, setCompanyData, mediaItems, setMediaItems } = useData();
   const [activeTab, setActiveTab] = useState('overview');
+
+  const [blogForm, setBlogForm] = useState({
+    title: '',
+    category: 'Real Estate Trends',
+    date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+    readTime: '5 min read',
+    author: 'Gurukripa Editorial Team',
+    authorRole: 'Senior Analyst',
+    featuredImage: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80',
+    excerpt: '',
+    content: '',
+    tags: 'Real Estate, Investment',
+    relatedProjects: ''
+  });
+  const [editingBlogId, setEditingBlogId] = useState(null);
+  const [isBlogModalOpen, setIsBlogModalOpen] = useState(false);
+  const [deletingBlogId, setDeletingBlogId] = useState(null);
+
+  const [testimonialForm, setTestimonialForm] = useState({
+    quote: '',
+    name: '',
+    detail: ''
+  });
+  const [editingTestimonialIndex, setEditingTestimonialIndex] = useState(null);
+  const [isTestimonialModalOpen, setIsTestimonialModalOpen] = useState(false);
+  const [deletingTestimonialIndex, setDeletingTestimonialIndex] = useState(null);
+
+  const [mediaForm, setMediaForm] = useState({
+    title: '',
+    category: 'Project Images',
+    type: 'image',
+    url: '',
+    videoUrl: '',
+    caption: '',
+    date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+  });
+  const [editingMediaId, setEditingMediaId] = useState(null);
+  const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
+  const [deletingMediaId, setDeletingMediaId] = useState(null);
 
   // CRM Leads State
   const [searchTerm, setSearchTerm] = useState('');
@@ -65,6 +112,23 @@ const AdminDashboardPage = () => {
   const [isAddProjectModalOpen, setIsAddProjectModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
   const [deletingProjectId, setDeletingProjectId] = useState(null);
+  const [projectCategoryForm, setProjectCategoryForm] = useState('');
+  const [editingProjectCategoryIndex, setEditingProjectCategoryIndex] = useState(null);
+  const [projectStatusForm, setProjectStatusForm] = useState('');
+  const [editingProjectStatusIndex, setEditingProjectStatusIndex] = useState(null);
+  const [blogCategoryForm, setBlogCategoryForm] = useState('');
+  const [editingBlogCategoryIndex, setEditingBlogCategoryIndex] = useState(null);
+  const [mediaCategoryForm, setMediaCategoryForm] = useState('');
+  const [editingMediaCategoryIndex, setEditingMediaCategoryIndex] = useState(null);
+
+  const defaultBlogCategories = ['Real Estate Trends', 'Legal & RERA', 'Investment Guides', 'Architecture & Design'];
+  const defaultMediaCategories = ['Project Images', 'Videos', 'Events', 'Company Activities', 'News & Press'];
+  const defaultProjectCategories = ['Premium Apartments', 'Affordable Housing', 'Luxury Villas', 'Premium Township', 'Commercial Complex', 'Residential Plots'];
+  const defaultProjectStatuses = ['Ready to Move', 'Under Construction', 'Launching Soon'];
+  const blogCategoryOptions = companyData.blogCategories?.length ? companyData.blogCategories : defaultBlogCategories;
+  const mediaCategoryOptions = companyData.mediaCategories?.length ? companyData.mediaCategories : defaultMediaCategories;
+  const projectCategoryOptions = companyData.projectCategories?.length ? companyData.projectCategories : defaultProjectCategories;
+  const projectStatusOptions = companyData.projectStatuses?.length ? companyData.projectStatuses : defaultProjectStatuses;
 
   // Form State for Add / Edit Project Card
   const [projectForm, setProjectForm] = useState({
@@ -208,9 +272,460 @@ const AdminDashboardPage = () => {
     setDeletingProjectId(null);
   };
 
+  const handleSaveBlogCategory = async () => {
+    const value = blogCategoryForm.trim();
+    if (!value) {
+      showToast('Blog category name is required.', 'error');
+      return;
+    }
+
+    const nextCategories = [...blogCategoryOptions];
+    if (editingBlogCategoryIndex !== null) {
+      nextCategories[editingBlogCategoryIndex] = value;
+    } else if (!nextCategories.includes(value)) {
+      nextCategories.push(value);
+    } else {
+      showToast('This blog category already exists.', 'info');
+      return;
+    }
+
+    try {
+      const response = await updateCompanyInfo({ blogCategories: nextCategories });
+      const nextValues = response?.blogCategories || nextCategories;
+      setCompanyData((prev) => ({ ...prev, blogCategories: nextValues }));
+      showToast(editingBlogCategoryIndex !== null ? 'Blog category updated.' : 'Blog category added.', 'success');
+    } catch (error) {
+      console.error('Failed to save blog category:', error);
+      showToast('Unable to save blog category right now.', 'error');
+      return;
+    }
+
+    setBlogCategoryForm('');
+    setEditingBlogCategoryIndex(null);
+  };
+
+  const handleDeleteBlogCategory = async (itemToDelete) => {
+    const nextCategories = blogCategoryOptions.filter((category) => category !== itemToDelete);
+    try {
+      const response = await updateCompanyInfo({ blogCategories: nextCategories });
+      const nextValues = response?.blogCategories || nextCategories;
+      setCompanyData((prev) => ({ ...prev, blogCategories: nextValues }));
+      showToast('Blog category removed successfully.', 'info');
+    } catch (error) {
+      console.error('Failed to delete blog category:', error);
+      showToast('Unable to delete blog category right now.', 'error');
+      return;
+    }
+  };
+
+  const handleSaveMediaCategory = async () => {
+    const value = mediaCategoryForm.trim();
+    if (!value) {
+      showToast('Media category name is required.', 'error');
+      return;
+    }
+
+    const nextCategories = [...mediaCategoryOptions];
+    if (editingMediaCategoryIndex !== null) {
+      nextCategories[editingMediaCategoryIndex] = value;
+    } else if (!nextCategories.includes(value)) {
+      nextCategories.push(value);
+    } else {
+      showToast('This media category already exists.', 'info');
+      return;
+    }
+
+    try {
+      const response = await updateCompanyInfo({ mediaCategories: nextCategories });
+      const nextValues = response?.mediaCategories || nextCategories;
+      setCompanyData((prev) => ({ ...prev, mediaCategories: nextValues }));
+      showToast(editingMediaCategoryIndex !== null ? 'Media category updated.' : 'Media category added.', 'success');
+    } catch (error) {
+      console.error('Failed to save media category:', error);
+      showToast('Unable to save media category right now.', 'error');
+      return;
+    }
+
+    setMediaCategoryForm('');
+    setEditingMediaCategoryIndex(null);
+  };
+
+  const handleDeleteMediaCategory = async (itemToDelete) => {
+    const nextCategories = mediaCategoryOptions.filter((category) => category !== itemToDelete);
+    try {
+      const response = await updateCompanyInfo({ mediaCategories: nextCategories });
+      const nextValues = response?.mediaCategories || nextCategories;
+      setCompanyData((prev) => ({ ...prev, mediaCategories: nextValues }));
+      showToast('Media category removed successfully.', 'info');
+    } catch (error) {
+      console.error('Failed to delete media category:', error);
+      showToast('Unable to delete media category right now.', 'error');
+      return;
+    }
+  };
+
+  const handleSaveProjectCategory = async () => {
+    const value = projectCategoryForm.trim();
+    if (!value) {
+      showToast('Category name is required.', 'error');
+      return;
+    }
+
+    const nextCategories = [...projectCategoryOptions];
+    if (editingProjectCategoryIndex !== null) {
+      nextCategories[editingProjectCategoryIndex] = value;
+    } else if (!nextCategories.includes(value)) {
+      nextCategories.push(value);
+    } else {
+      showToast('This category already exists.', 'info');
+      return;
+    }
+
+    try {
+      const response = await updateCompanyInfo({ projectCategories: nextCategories });
+      const nextValues = response?.projectCategories || nextCategories;
+      setCompanyData((prev) => ({ ...prev, projectCategories: nextValues }));
+      showToast(editingProjectCategoryIndex !== null ? 'Category updated.' : 'Category added.', 'success');
+    } catch (error) {
+      console.error('Failed to save category:', error);
+      showToast('Unable to save category right now.', 'error');
+      return;
+    }
+
+    setProjectCategoryForm('');
+    setEditingProjectCategoryIndex(null);
+  };
+
+  const handleDeleteProjectCategory = async (itemToDelete) => {
+    const nextCategories = projectCategoryOptions.filter((category) => category !== itemToDelete);
+    try {
+      const response = await updateCompanyInfo({ projectCategories: nextCategories });
+      const nextValues = response?.projectCategories || nextCategories;
+      setCompanyData((prev) => ({ ...prev, projectCategories: nextValues }));
+      if (projectCategoryFilter === itemToDelete) setProjectCategoryFilter('All');
+      showToast('Category removed successfully.', 'info');
+    } catch (error) {
+      console.error('Failed to delete category:', error);
+      showToast('Unable to delete category right now.', 'error');
+      return;
+    }
+  };
+
+  const handleSaveProjectStatus = async () => {
+    const value = projectStatusForm.trim();
+    if (!value) {
+      showToast('Status name is required.', 'error');
+      return;
+    }
+
+    const nextStatuses = [...projectStatusOptions];
+    if (editingProjectStatusIndex !== null) {
+      nextStatuses[editingProjectStatusIndex] = value;
+    } else if (!nextStatuses.includes(value)) {
+      nextStatuses.push(value);
+    } else {
+      showToast('This status already exists.', 'info');
+      return;
+    }
+
+    try {
+      const response = await updateCompanyInfo({ projectStatuses: nextStatuses });
+      const nextValues = response?.projectStatuses || nextStatuses;
+      setCompanyData((prev) => ({ ...prev, projectStatuses: nextValues }));
+      showToast(editingProjectStatusIndex !== null ? 'Status updated.' : 'Status added.', 'success');
+    } catch (error) {
+      console.error('Failed to save status:', error);
+      showToast('Unable to save status right now.', 'error');
+      return;
+    }
+
+    setProjectStatusForm('');
+    setEditingProjectStatusIndex(null);
+  };
+
+  const handleDeleteProjectStatus = async (itemToDelete) => {
+    const nextStatuses = projectStatusOptions.filter((status) => status !== itemToDelete);
+    try {
+      const response = await updateCompanyInfo({ projectStatuses: nextStatuses });
+      const nextValues = response?.projectStatuses || nextStatuses;
+      setCompanyData((prev) => ({ ...prev, projectStatuses: nextValues }));
+      if (projectStatusFilter === itemToDelete) setProjectStatusFilter('All');
+      showToast('Status removed successfully.', 'info');
+    } catch (error) {
+      console.error('Failed to delete status:', error);
+      showToast('Unable to delete status right now.', 'error');
+      return;
+    }
+  };
+
   const handleVisitStatusChange = (id, newStatus) => {
     setMockVisits((prev) => prev.map((v) => (v.id === id ? { ...v, status: newStatus } : v)));
     showToast(`Site visit ${id} status updated to ${newStatus}`, 'info');
+  };
+
+  const handleOpenAddTestimonialModal = () => {
+    setEditingTestimonialIndex(null);
+    setTestimonialForm({ quote: '', name: '', detail: '' });
+    setIsTestimonialModalOpen(true);
+  };
+
+  const handleOpenEditTestimonialModal = (testimonial, index) => {
+    setEditingTestimonialIndex(index);
+    setTestimonialForm({
+      quote: testimonial.quote || '',
+      name: testimonial.name || '',
+      detail: testimonial.detail || ''
+    });
+    setIsTestimonialModalOpen(true);
+  };
+
+  const handleSaveTestimonialSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!testimonialForm.quote.trim() || !testimonialForm.name.trim()) {
+      showToast('Testimonial quote and author name are required.', 'error');
+      return;
+    }
+
+    const updatedTestimonials = [...(companyData.testimonials || [])];
+    const payload = {
+      quote: testimonialForm.quote.trim(),
+      name: testimonialForm.name.trim(),
+      detail: testimonialForm.detail.trim()
+    };
+
+    if (editingTestimonialIndex !== null) {
+      updatedTestimonials[editingTestimonialIndex] = payload;
+    } else {
+      updatedTestimonials.push(payload);
+    }
+
+    try {
+      const response = await updateCompanyInfo({ testimonials: updatedTestimonials });
+      const nextTestimonials = response?.testimonials || updatedTestimonials;
+      setCompanyData((prev) => ({ ...prev, testimonials: nextTestimonials }));
+      showToast(editingTestimonialIndex !== null ? 'Testimonial updated successfully.' : 'Testimonial added successfully.', 'success');
+    } catch (error) {
+      console.error('Failed to save testimonial:', error);
+      showToast('Unable to save testimonial right now.', 'error');
+      return;
+    }
+
+    setIsTestimonialModalOpen(false);
+    setEditingTestimonialIndex(null);
+    setTestimonialForm({ quote: '', name: '', detail: '' });
+  };
+
+  const handleDeleteTestimonialConfirm = async (index) => {
+    const updatedTestimonials = (companyData.testimonials || []).filter((_, idx) => idx !== index);
+
+    try {
+      const response = await updateCompanyInfo({ testimonials: updatedTestimonials });
+      const nextTestimonials = response?.testimonials || updatedTestimonials;
+      setCompanyData((prev) => ({ ...prev, testimonials: nextTestimonials }));
+      showToast('Testimonial deleted successfully.', 'info');
+    } catch (error) {
+      console.error('Failed to delete testimonial:', error);
+      showToast('Unable to delete testimonial right now.', 'error');
+      return;
+    }
+
+    setDeletingTestimonialIndex(null);
+  };
+
+  const handleOpenAddBlogModal = () => {
+    setEditingBlogId(null);
+    setBlogForm({
+      title: '',
+      category: 'Real Estate Trends',
+      date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+      readTime: '5 min read',
+      author: 'Gurukripa Editorial Team',
+      authorRole: 'Senior Analyst',
+      featuredImage: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80',
+      excerpt: '',
+      content: '',
+      tags: 'Real Estate, Investment',
+      relatedProjects: ''
+    });
+    setIsBlogModalOpen(true);
+  };
+
+  const handleOpenEditBlogModal = (blog) => {
+    setEditingBlogId(blog.id || blog._id);
+    setBlogForm({
+      title: blog.title || '',
+      category: blog.category || 'Real Estate Trends',
+      date: blog.date || new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+      readTime: blog.readTime || '5 min read',
+      author: blog.author || 'Gurukripa Editorial Team',
+      authorRole: blog.authorRole || 'Senior Analyst',
+      featuredImage: blog.featuredImage || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80',
+      excerpt: blog.excerpt || '',
+      content: blog.content || '',
+      tags: Array.isArray(blog.tags) ? blog.tags.join(', ') : (blog.tags || 'Real Estate, Investment'),
+      relatedProjects: Array.isArray(blog.relatedProjects) ? blog.relatedProjects.join(', ') : (blog.relatedProjects || '')
+    });
+    setIsBlogModalOpen(true);
+  };
+
+  const handleSaveBlogSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!blogForm.title.trim() || !blogForm.content.trim()) {
+      showToast('Blog title and content are required.', 'error');
+      return;
+    }
+
+    const payload = {
+      title: blogForm.title.trim(),
+      category: blogForm.category || 'Real Estate Trends',
+      date: blogForm.date || new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+      readTime: blogForm.readTime || '5 min read',
+      author: blogForm.author || 'Gurukripa Editorial Team',
+      authorRole: blogForm.authorRole || 'Senior Analyst',
+      featuredImage: blogForm.featuredImage || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80',
+      excerpt: blogForm.excerpt.trim() || blogForm.content.trim().slice(0, 160),
+      content: blogForm.content.trim(),
+      slug: (blogForm.title.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') || `insight-${Date.now()}`),
+      tags: blogForm.tags ? blogForm.tags.split(',').map((tag) => tag.trim()).filter(Boolean) : [],
+      relatedProjects: blogForm.relatedProjects ? blogForm.relatedProjects.split(',').map((project) => project.trim()).filter(Boolean) : []
+    };
+
+    try {
+      if (editingBlogId) {
+        const updatedBlog = await updateBlogApi(editingBlogId, payload);
+        setBlogs((prev) => prev.map((blog) => (blog.id === editingBlogId || blog._id === editingBlogId ? updatedBlog : blog)));
+        showToast('Insights article updated successfully.', 'success');
+      } else {
+        const newBlog = await createBlogApi(payload);
+        setBlogs((prev) => [newBlog, ...prev]);
+        showToast('Insights article published successfully.', 'success');
+      }
+    } catch (error) {
+      console.error('Failed to save blog:', error);
+      showToast('Unable to save the insights article right now.', 'error');
+      return;
+    }
+
+    setIsBlogModalOpen(false);
+    setEditingBlogId(null);
+    setBlogForm({
+      title: '',
+      category: 'Real Estate Trends',
+      date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+      readTime: '5 min read',
+      author: 'Gurukripa Editorial Team',
+      authorRole: 'Senior Analyst',
+      featuredImage: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80',
+      excerpt: '',
+      content: '',
+      tags: 'Real Estate, Investment',
+      relatedProjects: ''
+    });
+  };
+
+  const handleDeleteBlogConfirm = async (id) => {
+    try {
+      await deleteBlogApi(id);
+      setBlogs((prev) => prev.filter((blog) => (blog.id || blog._id) !== id));
+      showToast('Insights article deleted successfully.', 'info');
+    } catch (error) {
+      console.error('Failed to delete blog:', error);
+      showToast('Unable to delete the insights article right now.', 'error');
+      return;
+    }
+
+    setDeletingBlogId(null);
+  };
+
+  const handleOpenAddMediaModal = () => {
+    setEditingMediaId(null);
+    setMediaForm({
+      title: '',
+      category: 'Project Images',
+      type: 'image',
+      url: '',
+      videoUrl: '',
+      caption: '',
+      date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+    });
+    setIsMediaModalOpen(true);
+  };
+
+  const handleOpenEditMediaModal = (mediaItem) => {
+    setEditingMediaId(mediaItem.id || mediaItem._id);
+    setMediaForm({
+      title: mediaItem.title || '',
+      category: mediaItem.category || 'Project Images',
+      type: mediaItem.type || 'image',
+      url: mediaItem.url || '',
+      videoUrl: mediaItem.videoUrl || '',
+      caption: mediaItem.caption || '',
+      date: mediaItem.date || new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+    });
+    setIsMediaModalOpen(true);
+  };
+
+  const handleSaveMediaSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!mediaForm.title.trim() || !mediaForm.url.trim()) {
+      showToast('Media title and image URL are required.', 'error');
+      return;
+    }
+
+    const payload = {
+      title: mediaForm.title.trim(),
+      category: mediaForm.category || 'Project Images',
+      type: mediaForm.type || 'image',
+      url: mediaForm.url.trim(),
+      videoUrl: mediaForm.videoUrl?.trim() || '',
+      caption: mediaForm.caption.trim(),
+      date: mediaForm.date || new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+    };
+
+    try {
+      if (editingMediaId) {
+        const updatedMedia = await updateMediaApi(editingMediaId, payload);
+        setMediaItems((prev) => prev.map((item) => (item.id === editingMediaId || item._id === editingMediaId ? updatedMedia : item)));
+        showToast('Media item updated successfully.', 'success');
+      } else {
+        const newMedia = await createMediaApi({ ...payload, id: `media-${Date.now()}` });
+        setMediaItems((prev) => [newMedia, ...prev]);
+        showToast('Media item added successfully.', 'success');
+      }
+    } catch (error) {
+      console.error('Failed to save media item:', error);
+      showToast('Unable to save media item right now.', 'error');
+      return;
+    }
+
+    setIsMediaModalOpen(false);
+    setEditingMediaId(null);
+    setMediaForm({
+      title: '',
+      category: 'Project Images',
+      type: 'image',
+      url: '',
+      videoUrl: '',
+      caption: '',
+      date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+    });
+  };
+
+  const handleDeleteMediaConfirm = async (id) => {
+    try {
+      await deleteMediaApi(id);
+      setMediaItems((prev) => prev.filter((item) => (item.id || item._id) !== id));
+      showToast('Media item deleted successfully.', 'info');
+    } catch (error) {
+      console.error('Failed to delete media item:', error);
+      showToast('Unable to delete media item right now.', 'error');
+      return;
+    }
+
+    setDeletingMediaId(null);
   };
 
   // Metrics Data
@@ -234,7 +749,7 @@ const AdminDashboardPage = () => {
               Executive Portal Dashboard
             </h1>
             <p className="text-ink-secondary text-xs sm:text-sm">
-              Real-time property inventory, CRM prospect leads, and executive site visit schedule.
+              Signed in as {user?.email}. Client signup accounts cannot reach this console.
             </p>
           </div>
 
@@ -246,10 +761,17 @@ const AdminDashboardPage = () => {
               <Plus className="w-4 h-4" />
               <span>Add New Prospect</span>
             </button>
-            <div className="bg-muted px-4 py-2 rounded-2xl border border-accent/20 text-xs font-semibold text-accent flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-accent" />
-              <span>Active System: Live Sync</span>
-            </div>
+            <button
+              type="button"
+              onClick={() => {
+                logout();
+                showToast('Admin session ended', 'info');
+              }}
+              className="btn-outline-gold text-xs px-4 py-2.5 flex items-center gap-2"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Log Out</span>
+            </button>
           </div>
         </div>
 
@@ -324,6 +846,42 @@ const AdminDashboardPage = () => {
                 <span className="bg-accent/20 text-accent text-[10px] px-2 py-0.5 rounded-full font-bold">
                   {mockVisits.length}
                 </span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('testimonials')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs sm:text-sm font-semibold transition-all ${
+                  activeTab === 'testimonials'
+                    ? 'bg-accent text-white shadow-md font-bold'
+                    : 'text-ink-secondary hover:text-ink hover:bg-muted'
+                }`}
+              >
+                <MessageSquareQuote className="w-4 h-4" />
+                <span>Testimonials</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('insights')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs sm:text-sm font-semibold transition-all ${
+                  activeTab === 'insights'
+                    ? 'bg-accent text-white shadow-md font-bold'
+                    : 'text-ink-secondary hover:text-ink hover:bg-muted'
+                }`}
+              >
+                <FileText className="w-4 h-4" />
+                <span>Insights / Trends</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('media')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs sm:text-sm font-semibold transition-all ${
+                  activeTab === 'media'
+                    ? 'bg-accent text-white shadow-md font-bold'
+                    : 'text-ink-secondary hover:text-ink hover:bg-muted'
+                }`}
+              >
+                <Building2 className="w-4 h-4" />
+                <span>Media Gallery</span>
               </button>
 
               <button
@@ -594,12 +1152,9 @@ const AdminDashboardPage = () => {
                       className="form-select text-xs py-2"
                     >
                       <option value="All">All Categories</option>
-                      <option value="Premium Apartments">Premium Apartments</option>
-                      <option value="Affordable Housing">Affordable Housing</option>
-                      <option value="Luxury Villas">Luxury Villas</option>
-                      <option value="Premium Township">Premium Township</option>
-                      <option value="Commercial Complex">Commercial Complex</option>
-                      <option value="Residential Plots">Residential Plots</option>
+                      {projectCategoryOptions.map((category) => (
+                        <option key={category} value={category}>{category}</option>
+                      ))}
                     </select>
 
                     <select
@@ -608,9 +1163,9 @@ const AdminDashboardPage = () => {
                       className="form-select text-xs py-2"
                     >
                       <option value="All">All Property Statuses</option>
-                      <option value="Ready to Move">Ready to Move</option>
-                      <option value="Under Construction">Under Construction</option>
-                      <option value="Launching Soon">Launching Soon</option>
+                      {projectStatusOptions.map((status) => (
+                        <option key={status} value={status}>{status}</option>
+                      ))}
                     </select>
 
                     <button
@@ -620,6 +1175,236 @@ const AdminDashboardPage = () => {
                       <Plus className="w-4 h-4" />
                       <span>Add New Property Card</span>
                     </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                  <div className="glass-panel p-5 rounded-3xl border border-accent/35 bg-surface shadow-lg">
+                    <div className="flex items-center justify-between gap-3 mb-4">
+                      <h3 className="font-heading text-lg font-bold text-ink">Manage Blog Categories</h3>
+                    </div>
+                    <div className="space-y-3">
+                      {blogCategoryOptions.map((category, index) => (
+                        <div key={category} className="flex items-center gap-2">
+                          <span className="flex-1 px-3 py-2 rounded-xl border border-accent/25 bg-muted text-sm text-ink">{category}</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setBlogCategoryForm(category);
+                              setEditingBlogCategoryIndex(index);
+                            }}
+                            className="btn-secondary text-[10px] px-2.5 py-2"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteBlogCategory(category)}
+                            className="bg-rose-500/10 text-rose-500 border border-rose-500/30 rounded-xl px-2.5 py-2 text-[10px] font-bold"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-4 flex gap-2">
+                      <input
+                        value={blogCategoryForm}
+                        onChange={(e) => setBlogCategoryForm(e.target.value)}
+                        placeholder="Add or edit blog category"
+                        className="form-input text-xs py-2.5 flex-1"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleSaveBlogCategory}
+                        className="btn-gold text-[10px] px-3 py-2"
+                      >
+                        {editingBlogCategoryIndex !== null ? 'Save' : 'Add'}
+                      </button>
+                      {editingBlogCategoryIndex !== null && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setBlogCategoryForm('');
+                            setEditingBlogCategoryIndex(null);
+                          }}
+                          className="btn-secondary text-[10px] px-3 py-2"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="glass-panel p-5 rounded-3xl border border-accent/35 bg-surface shadow-lg">
+                    <div className="flex items-center justify-between gap-3 mb-4">
+                      <h3 className="font-heading text-lg font-bold text-ink">Manage Media Categories</h3>
+                    </div>
+                    <div className="space-y-3">
+                      {mediaCategoryOptions.map((category, index) => (
+                        <div key={category} className="flex items-center gap-2">
+                          <span className="flex-1 px-3 py-2 rounded-xl border border-accent/25 bg-muted text-sm text-ink">{category}</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setMediaCategoryForm(category);
+                              setEditingMediaCategoryIndex(index);
+                            }}
+                            className="btn-secondary text-[10px] px-2.5 py-2"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteMediaCategory(category)}
+                            className="bg-rose-500/10 text-rose-500 border border-rose-500/30 rounded-xl px-2.5 py-2 text-[10px] font-bold"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-4 flex gap-2">
+                      <input
+                        value={mediaCategoryForm}
+                        onChange={(e) => setMediaCategoryForm(e.target.value)}
+                        placeholder="Add or edit media category"
+                        className="form-input text-xs py-2.5 flex-1"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleSaveMediaCategory}
+                        className="btn-gold text-[10px] px-3 py-2"
+                      >
+                        {editingMediaCategoryIndex !== null ? 'Save' : 'Add'}
+                      </button>
+                      {editingMediaCategoryIndex !== null && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMediaCategoryForm('');
+                            setEditingMediaCategoryIndex(null);
+                          }}
+                          className="btn-secondary text-[10px] px-3 py-2"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="glass-panel p-5 rounded-3xl border border-accent/35 bg-surface shadow-lg">
+                    <div className="flex items-center justify-between gap-3 mb-4">
+                      <h3 className="font-heading text-lg font-bold text-ink">Manage Project Categories</h3>
+                    </div>
+                    <div className="space-y-3">
+                      {projectCategoryOptions.map((category, index) => (
+                        <div key={category} className="flex items-center gap-2">
+                          <span className="flex-1 px-3 py-2 rounded-xl border border-accent/25 bg-muted text-sm text-ink">{category}</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setProjectCategoryForm(category);
+                              setEditingProjectCategoryIndex(index);
+                            }}
+                            className="btn-secondary text-[10px] px-2.5 py-2"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteProjectCategory(category)}
+                            className="bg-rose-500/10 text-rose-500 border border-rose-500/30 rounded-xl px-2.5 py-2 text-[10px] font-bold"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-4 flex gap-2">
+                      <input
+                        value={projectCategoryForm}
+                        onChange={(e) => setProjectCategoryForm(e.target.value)}
+                        placeholder="Add or edit category"
+                        className="form-input text-xs py-2.5 flex-1"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleSaveProjectCategory}
+                        className="btn-gold text-[10px] px-3 py-2"
+                      >
+                        {editingProjectCategoryIndex !== null ? 'Save' : 'Add'}
+                      </button>
+                      {editingProjectCategoryIndex !== null && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setProjectCategoryForm('');
+                            setEditingProjectCategoryIndex(null);
+                          }}
+                          className="btn-secondary text-[10px] px-3 py-2"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="glass-panel p-5 rounded-3xl border border-accent/35 bg-surface shadow-lg">
+                    <div className="flex items-center justify-between gap-3 mb-4">
+                      <h3 className="font-heading text-lg font-bold text-ink">Manage Statuses</h3>
+                    </div>
+                    <div className="space-y-3">
+                      {projectStatusOptions.map((status, index) => (
+                        <div key={status} className="flex items-center gap-2">
+                          <span className="flex-1 px-3 py-2 rounded-xl border border-accent/25 bg-muted text-sm text-ink">{status}</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setProjectStatusForm(status);
+                              setEditingProjectStatusIndex(index);
+                            }}
+                            className="btn-secondary text-[10px] px-2.5 py-2"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteProjectStatus(status)}
+                            className="bg-rose-500/10 text-rose-500 border border-rose-500/30 rounded-xl px-2.5 py-2 text-[10px] font-bold"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-4 flex gap-2">
+                      <input
+                        value={projectStatusForm}
+                        onChange={(e) => setProjectStatusForm(e.target.value)}
+                        placeholder="Add or edit status"
+                        className="form-input text-xs py-2.5 flex-1"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleSaveProjectStatus}
+                        className="btn-gold text-[10px] px-3 py-2"
+                      >
+                        {editingProjectStatusIndex !== null ? 'Save' : 'Add'}
+                      </button>
+                      {editingProjectStatusIndex !== null && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setProjectStatusForm('');
+                            setEditingProjectStatusIndex(null);
+                          }}
+                          className="btn-secondary text-[10px] px-3 py-2"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -798,7 +1583,215 @@ const AdminDashboardPage = () => {
               </motion.div>
             )}
 
-            {/* TAB 5: BROCHURE REQUESTS */}
+            {/* TAB 5: TESTIMONIALS */}
+            {activeTab === 'testimonials' && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                <div className="glass-panel p-6 rounded-3xl border border-accent/35 bg-surface shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div>
+                    <h2 className="font-heading text-xl font-bold text-ink">Client Testimonials</h2>
+                    <p className="text-xs text-ink-muted mt-0.5">Update, add, and remove testimonials shown on the homepage.</p>
+                  </div>
+
+                  <button onClick={handleOpenAddTestimonialModal} className="btn-gold text-xs py-2 px-4 font-bold flex items-center gap-1.5 shadow-md">
+                    <Plus className="w-4 h-4" />
+                    <span>Add Testimonial</span>
+                  </button>
+                </div>
+
+                <div className="grid gap-5">
+                  {(companyData.testimonials || []).length === 0 ? (
+                    <div className="glass-panel p-12 rounded-3xl border border-dashed border-border text-center">
+                      <MessageSquareQuote className="w-12 h-12 text-accent mx-auto opacity-60" />
+                      <h3 className="font-heading text-xl font-bold text-ink mt-4">No testimonials available</h3>
+                      <p className="text-xs text-ink-muted mt-2">Create the first client testimonial to showcase social proof on the website.</p>
+                    </div>
+                  ) : (
+                    (companyData.testimonials || []).map((testimonial, index) => (
+                      <div key={`${testimonial.name}-${index}`} className="glass-panel rounded-3xl border border-accent/35 bg-surface shadow-xl p-5 space-y-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="space-y-2 flex-1">
+                            <p className="text-sm font-medium text-ink italic leading-relaxed">“{testimonial.quote || 'No quote provided'}”</p>
+                            <div>
+                              <div className="font-bold text-ink">{testimonial.name || 'Anonymous'}</div>
+                              {testimonial.detail && <div className="text-[11px] text-ink-muted uppercase tracking-wide">{testimonial.detail}</div>}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            <button
+                              onClick={() => handleOpenEditTestimonialModal(testimonial, index)}
+                              className="bg-accent/15 text-accent border border-accent/30 hover:bg-accent hover:text-white px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1"
+                              title="Edit testimonial"
+                            >
+                              <Edit className="w-3.5 h-3.5" />
+                              <span>Edit</span>
+                            </button>
+                            <button
+                              onClick={() => setDeletingTestimonialIndex(index)}
+                              className="bg-rose-500/15 text-rose-400 border border-rose-500/30 hover:bg-rose-600 hover:text-white px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1"
+                              title="Delete testimonial"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span>Delete</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </motion.div>
+            )}
+
+            {/* TAB 6: INSIGHTS / REAL ESTATE TRENDS */}
+            {activeTab === 'insights' && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                <div className="glass-panel p-6 rounded-3xl border border-accent/35 bg-surface shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div>
+                    <h2 className="font-heading text-xl font-bold text-ink">Insights & Real Estate Trends</h2>
+                    <p className="text-xs text-ink-muted mt-0.5">Publish, edit, and remove market insight articles from the homepage and blog feed.</p>
+                  </div>
+
+                  <button onClick={handleOpenAddBlogModal} className="btn-gold text-xs py-2 px-4 font-bold flex items-center gap-1.5 shadow-md">
+                    <Plus className="w-4 h-4" />
+                    <span>New Insight</span>
+                  </button>
+                </div>
+
+                <div className="grid gap-5">
+                  {blogs.length === 0 ? (
+                    <div className="glass-panel p-12 rounded-3xl border border-dashed border-border text-center">
+                      <FileText className="w-12 h-12 text-accent mx-auto opacity-60" />
+                      <h3 className="font-heading text-xl font-bold text-ink mt-4">No insights published yet</h3>
+                      <p className="text-xs text-ink-muted mt-2">Create the first real estate trend article to appear on the homepage.</p>
+                    </div>
+                  ) : (
+                    blogs.map((blog) => (
+                      <div key={blog.id || blog._id} className="glass-panel rounded-3xl border border-accent/35 bg-surface shadow-xl overflow-hidden">
+                        <div className="md:flex">
+                          <img src={blog.featuredImage} alt={blog.title} className="w-full md:w-64 h-52 md:h-auto object-cover" />
+                          <div className="flex-1 p-5 space-y-4">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                              <div className="space-y-1">
+                                <span className="badge-gold text-[10px]">{blog.category || 'Real Estate Trends'}</span>
+                                <h3 className="font-heading text-xl font-bold text-ink">{blog.title}</h3>
+                              </div>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <button
+                                  onClick={() => handleOpenEditBlogModal(blog)}
+                                  className="bg-accent/15 text-accent border border-accent/30 hover:bg-accent hover:text-white px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1"
+                                  title="Edit insight"
+                                >
+                                  <Edit className="w-3.5 h-3.5" />
+                                  <span>Edit</span>
+                                </button>
+                                <button
+                                  onClick={() => setDeletingBlogId(blog.id || blog._id)}
+                                  className="bg-rose-500/15 text-rose-400 border border-rose-500/30 hover:bg-rose-600 hover:text-white px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1"
+                                  title="Delete insight"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                  <span>Delete</span>
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-3 text-[11px] text-ink-muted font-mono uppercase tracking-wide">
+                              <span>{blog.date}</span>
+                              <span>•</span>
+                              <span>{blog.readTime}</span>
+                              <span>•</span>
+                              <span>{blog.author}</span>
+                            </div>
+
+                            <p className="text-sm text-ink-secondary leading-relaxed">{blog.excerpt || blog.content?.slice(0, 180)}</p>
+
+                            <div className="flex flex-wrap gap-2">
+                              {(blog.tags || []).slice(0, 4).map((tag) => (
+                                <span key={tag} className="px-2 py-1 rounded-full bg-muted text-ink-secondary text-[10px] font-semibold border border-accent/20">
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </motion.div>
+            )}
+
+            {/* TAB 7: MEDIA GALLERY */}
+            {activeTab === 'media' && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                <div className="glass-panel p-6 rounded-3xl border border-accent/35 bg-surface shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div>
+                    <h2 className="font-heading text-xl font-bold text-ink">Media Gallery</h2>
+                    <p className="text-xs text-ink-muted mt-0.5">Add, edit, and remove project images, videos, and media announcements.</p>
+                  </div>
+
+                  <button onClick={handleOpenAddMediaModal} className="btn-gold text-xs py-2 px-4 font-bold flex items-center gap-1.5 shadow-md">
+                    <Plus className="w-4 h-4" />
+                    <span>New Media Item</span>
+                  </button>
+                </div>
+
+                <div className="grid gap-5">
+                  {mediaItems.length === 0 ? (
+                    <div className="glass-panel p-12 rounded-3xl border border-dashed border-border text-center">
+                      <Building2 className="w-12 h-12 text-accent mx-auto opacity-60" />
+                      <h3 className="font-heading text-xl font-bold text-ink mt-4">No media items yet</h3>
+                      <p className="text-xs text-ink-muted mt-2">Upload the first visual or video to populate the gallery.</p>
+                    </div>
+                  ) : (
+                    mediaItems.map((item) => (
+                      <div key={item.id || item._id} className="glass-panel rounded-3xl border border-accent/35 bg-surface shadow-xl overflow-hidden">
+                        <div className="md:flex">
+                          <img src={item.url} alt={item.title} className="w-full md:w-64 h-52 md:h-auto object-cover" />
+                          <div className="flex-1 p-5 space-y-4">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                              <div className="space-y-1">
+                                <span className="badge-gold text-[10px]">{item.category || 'Project Images'}</span>
+                                <h3 className="font-heading text-xl font-bold text-ink">{item.title}</h3>
+                              </div>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <button
+                                  onClick={() => handleOpenEditMediaModal(item)}
+                                  className="bg-accent/15 text-accent border border-accent/30 hover:bg-accent hover:text-white px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1"
+                                  title="Edit media"
+                                >
+                                  <Edit className="w-3.5 h-3.5" />
+                                  <span>Edit</span>
+                                </button>
+                                <button
+                                  onClick={() => setDeletingMediaId(item.id || item._id)}
+                                  className="bg-rose-500/15 text-rose-400 border border-rose-500/30 hover:bg-rose-600 hover:text-white px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1"
+                                  title="Delete media"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                  <span>Delete</span>
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-3 text-[11px] text-ink-muted font-mono uppercase tracking-wide">
+                              <span>{item.date}</span>
+                              <span>•</span>
+                              <span>{item.type === 'video' ? 'Video' : 'Image'}</span>
+                            </div>
+
+                            <p className="text-sm text-ink-secondary leading-relaxed">{item.caption || 'No caption provided yet.'}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </motion.div>
+            )}
+
+            {/* TAB 8: BROCHURE REQUESTS */}
             {activeTab === 'brochures' && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
                 <div className="glass-panel p-6 rounded-3xl border border-accent/35 bg-surface shadow-xl space-y-2">
@@ -835,7 +1828,7 @@ const AdminDashboardPage = () => {
               </motion.div>
             )}
 
-            {/* TAB 6: SETTINGS */}
+            {/* TAB 8: SETTINGS */}
             {activeTab === 'settings' && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
                 <div className="glass-panel p-6 rounded-3xl border border-accent/35 bg-surface shadow-xl space-y-6">
@@ -1095,7 +2088,164 @@ const AdminDashboardPage = () => {
         )}
       </AnimatePresence>
 
-      {/* MODAL 4: ADD / EDIT PROPERTY CARD */}
+      {/* MODAL 4: ADD / EDIT MEDIA ITEM */}
+      <AnimatePresence>
+        {isMediaModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-background/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="glass-panel p-6 sm:p-8 rounded-3xl border border-accent/40 bg-surface shadow-2xl w-full max-w-xl space-y-5 my-auto"
+            >
+              <div className="flex items-center justify-between border-b border-accent/20 pb-4">
+                <h3 className="font-heading text-xl font-bold text-ink">
+                  {editingMediaId ? 'Edit Media Item' : 'Add Media Item'}
+                </h3>
+                <button onClick={() => setIsMediaModalOpen(false)} className="text-ink-muted hover:text-ink">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveMediaSubmit} className="space-y-4 text-xs">
+                <div className="space-y-1">
+                  <label className="font-bold text-ink">Title *</label>
+                  <input
+                    type="text"
+                    required
+                    value={mediaForm.title}
+                    onChange={(e) => setMediaForm({ ...mediaForm, title: e.target.value })}
+                    className="form-input text-xs"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="font-bold text-ink">Category</label>
+                    <select
+                      value={mediaForm.category}
+                      onChange={(e) => setMediaForm({ ...mediaForm, category: e.target.value })}
+                      className="form-select text-xs"
+                    >
+                      {['Project Images', 'Videos', 'Events', 'Company Activities', 'News & Press'].map((option) => (
+                        <option key={option} value={option}>{option}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="font-bold text-ink">Type</label>
+                    <select
+                      value={mediaForm.type}
+                      onChange={(e) => setMediaForm({ ...mediaForm, type: e.target.value })}
+                      className="form-select text-xs"
+                    >
+                      <option value="image">Image</option>
+                      <option value="video">Video</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-bold text-ink">Image URL *</label>
+                  <input
+                    type="url"
+                    required
+                    value={mediaForm.url}
+                    onChange={(e) => setMediaForm({ ...mediaForm, url: e.target.value })}
+                    className="form-input text-xs"
+                  />
+                </div>
+
+                {mediaForm.type === 'video' && (
+                  <div className="space-y-1">
+                    <label className="font-bold text-ink">Video URL</label>
+                    <input
+                      type="url"
+                      value={mediaForm.videoUrl}
+                      onChange={(e) => setMediaForm({ ...mediaForm, videoUrl: e.target.value })}
+                      className="form-input text-xs"
+                    />
+                  </div>
+                )}
+
+                <div className="space-y-1">
+                  <label className="font-bold text-ink">Caption</label>
+                  <textarea
+                    rows="3"
+                    value={mediaForm.caption}
+                    onChange={(e) => setMediaForm({ ...mediaForm, caption: e.target.value })}
+                    className="form-input text-xs"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-bold text-ink">Date</label>
+                  <input
+                    type="text"
+                    value={mediaForm.date}
+                    onChange={(e) => setMediaForm({ ...mediaForm, date: e.target.value })}
+                    className="form-input text-xs"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3 pt-2">
+                  <button type="button" onClick={() => setIsMediaModalOpen(false)} className="btn-outline-gold text-xs py-2 px-4">
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn-gold text-xs py-2 px-5">
+                    {editingMediaId ? 'Save Changes' : 'Add Media'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete confirm modal for media item */}
+      <AnimatePresence>
+        {deletingMediaId && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] bg-background/80 backdrop-blur-md flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="glass-panel p-6 rounded-3xl border border-accent/40 bg-surface shadow-2xl w-full max-w-md space-y-5"
+            >
+              <div className="flex items-center justify-between border-b border-accent/20 pb-3">
+                <h3 className="font-heading text-lg font-bold text-ink">Delete Media Item</h3>
+                <button onClick={() => setDeletingMediaId(null)} className="text-ink-muted hover:text-ink">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <p className="text-sm text-ink-secondary">This media item will be removed from the public gallery. Continue?</p>
+
+              <div className="flex justify-end gap-3">
+                <button type="button" onClick={() => setDeletingMediaId(null)} className="btn-outline-gold text-xs py-2 px-4">
+                  Cancel
+                </button>
+                <button type="button" onClick={() => handleDeleteMediaConfirm(deletingMediaId)} className="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold py-2 px-4 rounded-xl">
+                  Delete
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* MODAL 5: ADD / EDIT PROPERTY CARD */}
       <AnimatePresence>
         {isAddProjectModalOpen && (
           <motion.div
@@ -1140,12 +2290,9 @@ const AdminDashboardPage = () => {
                       onChange={(e) => setProjectForm({ ...projectForm, category: e.target.value })}
                       className="form-select text-xs"
                     >
-                      <option value="Premium Apartments">Premium Apartments</option>
-                      <option value="Affordable Housing">Affordable Housing</option>
-                      <option value="Luxury Villas">Luxury Villas</option>
-                      <option value="Premium Township">Premium Township</option>
-                      <option value="Commercial Complex">Commercial Complex</option>
-                      <option value="Residential Plots">Residential Plots</option>
+                      {projectCategoryOptions.map((option) => (
+                        <option key={option} value={option}>{option}</option>
+                      ))}
                     </select>
                   </div>
                 </div>
@@ -1158,9 +2305,9 @@ const AdminDashboardPage = () => {
                       onChange={(e) => setProjectForm({ ...projectForm, status: e.target.value })}
                       className="form-select text-xs"
                     >
-                      <option value="Ready to Move">Ready to Move</option>
-                      <option value="Under Construction">Under Construction</option>
-                      <option value="Launching Soon">Launching Soon</option>
+                      {projectStatusOptions.map((option) => (
+                        <option key={option} value={option}>{option}</option>
+                      ))}
                     </select>
                   </div>
 
@@ -1275,7 +2422,118 @@ const AdminDashboardPage = () => {
         )}
       </AnimatePresence>
 
-      {/* MODAL 5: DELETE CONFIRMATION */}
+      {/* MODAL 5: TESTIMONIAL FORM */}
+      <AnimatePresence>
+        {isTestimonialModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-background/80 backdrop-blur-md flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="glass-panel p-6 sm:p-8 rounded-3xl border border-accent/40 bg-surface shadow-2xl w-full max-w-xl space-y-5"
+            >
+              <div className="flex items-center justify-between border-b border-accent/20 pb-4">
+                <h3 className="font-heading text-lg font-bold text-ink">
+                  {editingTestimonialIndex !== null ? 'Edit Testimonial' : 'Add New Testimonial'}
+                </h3>
+                <button onClick={() => setIsTestimonialModalOpen(false)} className="text-ink-muted hover:text-ink">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveTestimonialSubmit} className="space-y-4 text-xs">
+                <div className="space-y-1">
+                  <label className="font-bold text-ink">Quote *</label>
+                  <textarea
+                    rows="4"
+                    required
+                    placeholder="Write the customer feedback here..."
+                    value={testimonialForm.quote}
+                    onChange={(e) => setTestimonialForm({ ...testimonialForm, quote: e.target.value })}
+                    className="form-input text-xs"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="font-bold text-ink">Customer Name *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Aarav Mehta"
+                      value={testimonialForm.name}
+                      onChange={(e) => setTestimonialForm({ ...testimonialForm, name: e.target.value })}
+                      className="form-input text-xs"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="font-bold text-ink">Detail / Title</label>
+                    <input
+                      type="text"
+                      placeholder="Homeowner, Gurukripa Heights"
+                      value={testimonialForm.detail}
+                      onChange={(e) => setTestimonialForm({ ...testimonialForm, detail: e.target.value })}
+                      className="form-input text-xs"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-2">
+                  <button type="button" onClick={() => setIsTestimonialModalOpen(false)} className="btn-outline-gold text-xs py-2 px-4">
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn-gold text-xs py-2 px-5">
+                    {editingTestimonialIndex !== null ? 'Save Changes' : 'Add Testimonial'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* MODAL 6: DELETE TESTIMONIAL CONFIRMATION */}
+      <AnimatePresence>
+        {deletingTestimonialIndex !== null && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-background/80 backdrop-blur-md flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.9 }}
+              className="glass-panel p-6 rounded-3xl border border-rose-500/40 bg-surface shadow-2xl w-full max-w-sm text-center space-y-4"
+            >
+              <div className="w-14 h-14 rounded-full bg-rose-500/15 text-rose-400 border border-rose-500/30 flex items-center justify-center mx-auto">
+                <Trash2 className="w-7 h-7" />
+              </div>
+              <h3 className="font-heading text-lg font-bold text-ink">Delete Testimonial?</h3>
+              <p className="text-xs text-ink-muted">
+                This testimonial will be removed from the homepage immediately.
+              </p>
+              <div className="flex justify-center gap-3 pt-2">
+                <button onClick={() => setDeletingTestimonialIndex(null)} className="btn-outline-gold text-xs py-2 px-4 font-semibold">
+                  Cancel
+                </button>
+                <button onClick={() => handleDeleteTestimonialConfirm(deletingTestimonialIndex)} className="bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs py-2 px-5 rounded-xl transition-colors">
+                  Yes, Delete
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* MODAL 7: DELETE CONFIRMATION */}
       <AnimatePresence>
         {deletingProjectId && (
           <motion.div

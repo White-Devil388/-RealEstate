@@ -15,7 +15,11 @@ const EMPTY_COMPANY = {
   coreValues: [],
   testimonials: [],
   leadershipTeam: [],
-  faqItems: []
+  faqItems: [],
+  blogCategories: ['Real Estate Trends', 'Legal & RERA', 'Investment Guides', 'Architecture & Design'],
+  mediaCategories: ['Project Images', 'Videos', 'Events', 'Company Activities', 'News & Press'],
+  projectCategories: ['Premium Apartments', 'Affordable Housing', 'Luxury Villas', 'Premium Township', 'Commercial Complex', 'Residential Plots'],
+  projectStatuses: ['Ready to Move', 'Under Construction', 'Launching Soon']
 };
 
 export const DataProvider = ({ children }) => {
@@ -42,7 +46,7 @@ export const DataProvider = ({ children }) => {
       setBlogsLoading(true);
       try {
         const apiBlogs = await getBlogs();
-        if (apiBlogs && Array.isArray(apiBlogs)) {
+        if (Array.isArray(apiBlogs)) {
           setBlogs(apiBlogs);
         }
       } catch (err) {
@@ -55,7 +59,7 @@ export const DataProvider = ({ children }) => {
       setCareersLoading(true);
       try {
         const apiCareers = await getCareers();
-        if (apiCareers && Array.isArray(apiCareers)) {
+        if (Array.isArray(apiCareers)) {
           setCareers(apiCareers);
         }
       } catch (err) {
@@ -76,7 +80,19 @@ export const DataProvider = ({ children }) => {
             coreValues: apiCompany.coreValues || [],
             testimonials: apiCompany.testimonials || [],
             leadershipTeam: apiCompany.leadershipTeam || [],
-            faqItems: apiCompany.faqItems || []
+            faqItems: apiCompany.faqItems || [],
+            blogCategories: apiCompany.blogCategories && apiCompany.blogCategories.length > 0
+              ? apiCompany.blogCategories
+              : EMPTY_COMPANY.blogCategories,
+            mediaCategories: apiCompany.mediaCategories && apiCompany.mediaCategories.length > 0
+              ? apiCompany.mediaCategories
+              : EMPTY_COMPANY.mediaCategories,
+            projectCategories: apiCompany.projectCategories && apiCompany.projectCategories.length > 0
+              ? apiCompany.projectCategories
+              : EMPTY_COMPANY.projectCategories,
+            projectStatuses: apiCompany.projectStatuses && apiCompany.projectStatuses.length > 0
+              ? apiCompany.projectStatuses
+              : EMPTY_COMPANY.projectStatuses
           });
         }
       } catch (err) {
@@ -89,7 +105,7 @@ export const DataProvider = ({ children }) => {
       setMediaLoading(true);
       try {
         const apiMedia = await getMedia();
-        if (apiMedia && Array.isArray(apiMedia)) {
+        if (Array.isArray(apiMedia)) {
           setMediaItems(apiMedia);
         }
       } catch (err) {

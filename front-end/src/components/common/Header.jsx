@@ -3,13 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLead } from '../../context/LeadContext';
 import { useAuth } from '../../context/AuthContext';
-import { Calendar, Menu, X, PhoneCall, ArrowRight, UserRound, LogOut, LayoutDashboard } from 'lucide-react';
+import { Calendar, Menu, X, PhoneCall, ArrowRight, UserRound, LogOut, LayoutDashboard, ShieldCheck } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 
 const Header = () => {
   const navigate = useNavigate();
   const { currentPage, setCurrentPage, openSiteVisitForProject, showToast } = useLead();
-  const { user, openAuthModal, logout } = useAuth();
+  const { user, isAdmin, openAuthModal, logout } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -162,9 +162,9 @@ const Header = () => {
             <div className="flex items-center gap-1.5 border border-accent/40 bg-accent/10 p-1 pl-2.5 rounded-full">
               <button
                 type="button"
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate(isAdmin ? '/admin' : '/dashboard')}
                 className="flex items-center gap-2 text-left hover:text-accent transition-colors"
-                title="Go to Dashboard"
+                title={isAdmin ? 'Go to Admin Console' : 'Go to Dashboard'}
               >
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent text-[var(--text-inverse)] text-xs font-bold shadow-sm">
                   {user.name?.charAt(0).toUpperCase() || 'U'}
@@ -284,6 +284,19 @@ const Header = () => {
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2 pt-1">
+                      {isAdmin && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsMobileMenuOpen(false);
+                            navigate('/admin');
+                          }}
+                          className="btn-gold col-span-2 py-2 text-xs font-bold flex items-center justify-center gap-1.5"
+                        >
+                          <ShieldCheck className="w-3.5 h-3.5" />
+                          <span>Admin Console</span>
+                        </button>
+                      )}
                       <button
                         type="button"
                         onClick={() => {

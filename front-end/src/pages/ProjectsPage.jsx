@@ -1,23 +1,35 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLead } from '../context/LeadContext';
 import { useProjects } from '../context/ProjectContext';
+import { useData } from '../context/DataContext';
 import { useSearchParams } from 'react-router-dom';
 import { Search, MapPin, Grid, Map, Calendar, ArrowRight, SlidersHorizontal, Check } from 'lucide-react';
 
 const ProjectsPage = () => {
   const { projects } = useProjects();
+  const { companyData } = useData();
   const { setActiveProjectModal, openSiteVisitForProject } = useLead();
   const [searchParams] = useSearchParams();
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedLocation, setSelectedLocation] = useState('All');
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [selectedStatus, setSelectedStatus] = useState('All');
+  const [selectedLocation, setSelectedLocation] = useState(searchParams.get('city') || 'All');
+  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'All');
+  const [selectedStatus, setSelectedStatus] = useState(searchParams.get('status') || 'All');
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'map'
 
+  useEffect(() => {
+    setSelectedLocation(searchParams.get('city') || 'All');
+    setSelectedCategory(searchParams.get('category') || 'All');
+    setSelectedStatus(searchParams.get('status') || 'All');
+  }, [searchParams]);
+
   const locationOptions = ['All', ...new Set(projects.map((project) => project.city).filter(Boolean))];
-  const categoryOptions = ['All', ...new Set(projects.map((project) => project.category).filter(Boolean))];
-  const statusOptions = ['All', ...new Set(projects.map((project) => project.status).filter(Boolean))];
+  const categoryOptions = ['All', ...(companyData.projectCategories && companyData.projectCategories.length > 0
+    ? companyData.projectCategories
+    : [...new Set(projects.map((project) => project.category).filter(Boolean))])];
+  const statusOptions = ['All', ...(companyData.projectStatuses && companyData.projectStatuses.length > 0
+    ? companyData.projectStatuses
+    : [...new Set(projects.map((project) => project.status).filter(Boolean))])];
 
   const filteredProjects = projects.filter((project) => {
     if (searchTerm && !project.name.toLowerCase().includes(searchTerm.toLowerCase()) && !project.location.toLowerCase().includes(searchTerm.toLowerCase())) {
@@ -38,12 +50,6 @@ const ProjectsPage = () => {
       return false;
     }
     if (selectedStatus !== 'All' && project.status !== selectedStatus) {
-      return false;
-    }
-    if (selectedStatus === 'All' && searchParams.get('status') && project.projectStatus !== searchParams.get('status')) {
-      return false;
-    }
-    if (selectedCategory === 'All' && searchParams.get('type') && project.projectType !== searchParams.get('type')) {
       return false;
     }
     return true;
@@ -251,12 +257,33 @@ const ProjectsPage = () => {
                       <h3 className="font-heading text-2xl font-bold text-ink group-hover:text-accent transition-colors leading-tight">
                         {project.name}
                       </h3>
-                      <p className="text-sm text-ink-secondary leading-relaxed line-clamp-2">
-                        {project.shortDesc}
+                      <p className="text-sm text-ink-secondary leading-relaxed">
+                        {project.shortDesc || 'Premium residential development designed for modern urban living and long-term value.'}
                       </p>
                     </div>
 
-                    <div className="border-t border-accent/20 pt-5 space-y-5">
+                    <div className="border-t border-accent/20 pt-5 space-y-4">
+                      <div className="rounded-2xl bg-muted/70 border border-accent/15 p-3 space-y-2 text-xs">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-ink-muted uppercase tracking-wide font-bold">Configurations</span>
+                          <span className="font-extrabold text-ink text-right">
+                            {project.specifications?.configurations || project.configurations || '2 & 3 BHK'}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-ink-muted uppercase tracking-wide font-bold">Units</span>
+                          <span className="font-semibold text-ink text-right">
+                            {project.specifications?.totalUnits || project.totalUnits || '120 Units'}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-ink-muted uppercase tracking-wide font-bold">Possession</span>
+                          <span className="font-semibold text-ink text-right">
+                            {project.specifications?.possession || project.possession || '2027'}
+                          </span>
+                        </div>
+                      </div>
+
                       <div className="flex items-center justify-between">
                         <div className="text-xs uppercase text-ink-muted font-bold tracking-wider">Price Band</div>
                         <div className="text-base font-extrabold text-accent">{project.price}</div>

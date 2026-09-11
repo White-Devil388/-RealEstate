@@ -1,7 +1,9 @@
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
+import 'dotenv/config';
+import mongoose from 'mongoose';
 import connectDB from './config/db.js';
+import { ensureAdminAccount } from './services/seedAdmin.js';
 import leadRoutes from './routes/leadRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import projectRoutes from './routes/projectRoutes.js';
@@ -10,8 +12,6 @@ import careerRoutes from './routes/careerRoutes.js';
 import companyRoutes from './routes/companyRoutes.js';
 import mediaRoutes from './routes/mediaRoutes.js';
 
-dotenv.config();
-
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -19,6 +19,12 @@ app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
 connectDB();
+
+mongoose.connection.on('connected', () => {
+  ensureAdminAccount().catch((error) => {
+    console.warn('Unable to seed admin account:', error.message);
+  });
+});
 
 app.get('/api/health', (_req, res) => {
   res.json({

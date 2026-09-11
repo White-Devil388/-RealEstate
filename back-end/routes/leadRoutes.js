@@ -1,6 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import Lead from '../models/Lead.js';
+import { requireAdmin } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
@@ -36,7 +37,7 @@ const defaultLeads = [
 const fallbackLeads = [...defaultLeads];
 const isDatabaseConnected = () => mongoose.connection.readyState === 1;
 
-router.get('/', async (_req, res) => {
+router.get('/', requireAdmin, async (_req, res) => {
   if (!isDatabaseConnected()) {
     return res.json(fallbackLeads);
   }
@@ -94,7 +95,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.patch('/:id', async (req, res) => {
+router.patch('/:id', requireAdmin, async (req, res) => {
   try {
     const { status } = req.body;
 

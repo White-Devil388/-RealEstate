@@ -5,13 +5,13 @@ import { Search, ArrowRight, Sparkles } from 'lucide-react';
 
 const BlogPage = () => {
   const { setActiveBlogModal, showToast } = useLead();
-  const { blogs, blogsLoading } = useData();
+  const { blogs, blogsLoading, companyData } = useData();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCat, setSelectedCat] = useState('All');
   const [newsletterEmail, setNewsletterEmail] = useState('');
 
-  const categories = ['All', 'Real Estate Trends', 'Legal & RERA', 'Investment Guides', 'Architecture & Design'];
+  const categories = ['All', ...(companyData.blogCategories && companyData.blogCategories.length > 0 ? companyData.blogCategories : ['Real Estate Trends', 'Legal & RERA', 'Investment Guides', 'Architecture & Design'])];
 
   const filteredPosts = blogs.filter((post) => {
     if (searchTerm && !post.title.toLowerCase().includes(searchTerm.toLowerCase()) && !post.excerpt.toLowerCase().includes(searchTerm.toLowerCase())) {

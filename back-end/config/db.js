@@ -1,5 +1,6 @@
 import dns from 'dns';
 import mongoose from 'mongoose';
+import 'dotenv/config';
 
 // Ensure DNS resolution works reliably for MongoDB Atlas SRV URIs across all platforms/ISPs
 try {

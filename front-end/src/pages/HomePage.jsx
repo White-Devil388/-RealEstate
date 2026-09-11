@@ -61,7 +61,14 @@ const HomePage = () => {
 
   const goToProjects = () => {
     setCurrentPage('projects');
-    navigate('/projects');
+
+    const params = new URLSearchParams();
+    if (searchLocation !== 'All') params.set('city', searchLocation);
+    if (searchCategory !== 'All') params.set('category', searchCategory);
+    if (searchStatus !== 'All') params.set('status', searchStatus);
+
+    const queryString = params.toString();
+    navigate(queryString ? `/projects?${queryString}` : '/projects');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -356,8 +363,32 @@ const HomePage = () => {
                   <h3 className="font-heading text-xl font-semibold text-ink card-title-hover transition-colors">
                     {project.name}
                   </h3>
-                  <p className="text-sm text-ink-secondary leading-relaxed line-clamp-2">{project.shortDesc}</p>
+                  <p className="text-sm text-ink-secondary leading-relaxed">
+                    {project.shortDesc || 'Premium residential development designed for modern urban living and long-term value.'}
+                  </p>
                 </div>
+
+                <div className="rounded-2xl bg-muted/70 border border-accent/15 p-3 space-y-2 text-xs">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-ink-muted uppercase tracking-wide font-bold">Configurations</span>
+                    <span className="font-extrabold text-ink text-right">
+                      {project.specifications?.configurations || project.configurations || '2 & 3 BHK'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-ink-muted uppercase tracking-wide font-bold">Units</span>
+                    <span className="font-semibold text-ink text-right">
+                      {project.specifications?.totalUnits || project.totalUnits || '120 Units'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-ink-muted uppercase tracking-wide font-bold">Possession</span>
+                    <span className="font-semibold text-ink text-right">
+                      {project.specifications?.possession || project.possession || '2027'}
+                    </span>
+                  </div>
+                </div>
+
                 <div className="mt-auto pt-5 border-t border-border space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-xs uppercase text-ink-muted font-semibold tracking-wide font-mono">Starting from</span>

@@ -1,28 +1,21 @@
-import axios from 'axios';
-
-const api = axios.create({
-  baseURL: '/api',
-  headers: {
-    'Content-Type': 'application/json'
-  }
-});
+import http from './http';
 
 export const getProjects = async () => {
-  const response = await api.get('/projects');
+  const response = await http.get('/projects');
   return response.data;
 };
 
 export const createProjectApi = async (projectData) => {
-  const response = await api.post('/projects', projectData);
+  const response = await http.post('/projects', projectData);
   return response.data;
 };
 
 export const updateProjectApi = async (id, updatedFields) => {
-  const response = await api.put(`/projects/${id}`, updatedFields);
+  const response = await http.put(`/projects/${id}`, updatedFields);
   return response.data;
 };
 
 export const deleteProjectApi = async (id) => {
-  const response = await api.delete(`/projects/${id}`);
+  const response = await http.delete(`/projects/${id}`);
   return response.data;
 };

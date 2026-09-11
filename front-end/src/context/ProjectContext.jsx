@@ -38,7 +38,7 @@ export const ProjectProvider = ({ children }) => {
       try {
         setIsLoading(true);
         const apiData = await getProjects();
-        if (apiData && Array.isArray(apiData) && apiData.length > 0) {
+        if (Array.isArray(apiData)) {
           setProjects(apiData);
         }
       } catch (err) {
@@ -163,7 +163,7 @@ export const ProjectProvider = ({ children }) => {
   const resetProjects = async () => {
     try {
       const apiData = await getProjects();
-      if (apiData && Array.isArray(apiData)) {
+      if (Array.isArray(apiData)) {
         setProjects(apiData);
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(apiData));
       }

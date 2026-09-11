@@ -5,11 +5,11 @@ import { Play, Maximize2 } from 'lucide-react';
 
 const MediaPage = () => {
   const { setActiveLightboxMedia } = useLead();
-  const { mediaItems, mediaLoading } = useData();
+  const { mediaItems, mediaLoading, companyData } = useData();
 
   const [selectedCat, setSelectedCat] = useState('All');
 
-  const categories = ['All', 'Project Images', 'Videos', 'Events', 'Company Activities', 'News & Press'];
+  const categories = ['All', ...(companyData.mediaCategories && companyData.mediaCategories.length > 0 ? companyData.mediaCategories : ['Project Images', 'Videos', 'Events', 'Company Activities', 'News & Press'])];
 
   const filteredMedia = selectedCat === 'All' 
     ? mediaItems 

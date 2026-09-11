@@ -1,6 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import Company from '../models/Company.js';
+import { requireAdmin } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
@@ -25,7 +26,7 @@ router.get('/', async (_req, res) => {
   }
 });
 
-router.put('/', async (req, res) => {
+router.put('/', requireAdmin, async (req, res) => {
   try {
     const updatedFields = req.body || {};
 

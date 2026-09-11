@@ -1,6 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import Blog from '../models/Blog.js';
+import { requireAdmin } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
@@ -43,7 +44,7 @@ router.get('/:idOrSlug', async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', requireAdmin, async (req, res) => {
   try {
     const blogData = req.body || {};
     const newId = blogData.id || `blog-${Date.now()}`;
@@ -68,7 +69,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const updatedFields = req.body || {};
@@ -99,7 +100,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
 

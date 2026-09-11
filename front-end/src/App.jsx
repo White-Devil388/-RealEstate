@@ -41,8 +41,8 @@ const AppContent = () => {
       <BlogDetailModal />
       <BrochureModal />
       <AuthContainer
-        onAuthenticated={() => {
-          navigate('/dashboard');
+        onAuthenticated={(user) => {
+          navigate(user?.role === 'admin' ? '/admin' : '/dashboard');
         }}
       />
     </div>
@@ -53,15 +53,15 @@ function App() {
   return (
     <BrowserRouter>
       <ThemeProvider>
-        <LeadProvider>
-          <AuthProvider>
+        <AuthProvider>
+          <LeadProvider>
             <ProjectProvider>
               <DataProvider>
                 <AppContent />
               </DataProvider>
             </ProjectProvider>
-          </AuthProvider>
-        </LeadProvider>
+          </LeadProvider>
+        </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>
   );

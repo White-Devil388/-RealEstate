@@ -1,9 +1,11 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { getLeads, createLead, updateLeadStatus as updateLeadStatusApi } from '../api/leadApi';
+import { useAuth } from './AuthContext';
 
 const LeadContext = createContext();
 
 export const LeadProvider = ({ children }) => {
+  const { isAdmin } = useAuth();
   const [currentPage, setCurrentPage] = useState('home');
   const [activeProjectModal, setActiveProjectModal] = useState(null);
   const [isSiteVisitModalOpen, setIsSiteVisitModalOpen] = useState(false);
@@ -24,6 +26,11 @@ export const LeadProvider = ({ children }) => {
 
   useEffect(() => {
     const fetchLeads = async () => {
+      if (!isAdmin) {
+        setLeads([]);
+        return;
+      }
+
       try {
         const data = await getLeads();
         setLeads(data || []);
@@ -34,7 +41,7 @@ export const LeadProvider = ({ children }) => {
     };
 
     fetchLeads();
-  }, []);
+  }, [isAdmin]);
 
   const submitLead = async (leadData) => {
     try {

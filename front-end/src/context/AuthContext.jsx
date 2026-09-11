@@ -1,7 +1,17 @@
-import React, { createContext, useContext, useState } from 'react';
-import { loginUser, signupUser } from '../api/authApi';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { fetchCurrentUser, loginAdmin, loginUser, signupUser } from '../api/authApi';
 
 const AuthContext = createContext();
+
+const persistSession = (token, user) => {
+  localStorage.setItem('teca-token', token);
+  localStorage.setItem('teca-user', JSON.stringify(user));
+};
+
+const clearSession = () => {
+  localStorage.removeItem('teca-token');
+  localStorage.removeItem('teca-user');
+};
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
@@ -15,7 +25,8 @@ export const AuthProvider = ({ children }) => {
 
   const [token, setToken] = useState(() => localStorage.getItem('teca-token') || null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [authMode, setAuthMode] = useState('login'); // 'login' | 'signup'
+  const [authMode, setAuthMode] = useState('login');
+  const [isRestoring, setIsRestoring] = useState(Boolean(localStorage.getItem('teca-token')));
 
   const openAuthModal = (mode = 'login') => {
     setAuthMode(mode);
@@ -26,15 +37,26 @@ export const AuthProvider = ({ children }) => {
     setIsAuthModalOpen(false);
   };
 
+  const applySession = (data) => {
+    persistSession(data.token, data.user);
+    setToken(data.token);
+    setUser(data.user);
+    setIsAuthModalOpen(false);
+    return data.user;
+  };
+
   const login = async (credentials) => {
     const data = await loginUser(credentials);
     if (data && data.token && data.user) {
-      localStorage.setItem('teca-token', data.token);
-      localStorage.setItem('teca-user', JSON.stringify(data.user));
-      setToken(data.token);
-      setUser(data.user);
-      setIsAuthModalOpen(false);
-      return data.user;
+      return applySession(data);
+    }
+    throw new Error('Invalid server response');
+  };
+
+  const loginAsAdmin = async (credentials) => {
+    const data = await loginAdmin(credentials);
+    if (data && data.token && data.user) {
+      return applySession(data);
     }
     throw new Error('Invalid server response');
   };
@@ -42,22 +64,44 @@ export const AuthProvider = ({ children }) => {
   const signup = async (details) => {
     const data = await signupUser(details);
     if (data && data.token && data.user) {
-      localStorage.setItem('teca-token', data.token);
-      localStorage.setItem('teca-user', JSON.stringify(data.user));
-      setToken(data.token);
-      setUser(data.user);
-      setIsAuthModalOpen(false);
-      return data.user;
+      return applySession(data);
     }
     throw new Error('Invalid server response');
   };
 
   const logout = () => {
-    localStorage.removeItem('teca-token');
-    localStorage.removeItem('teca-user');
+    clearSession();
     setToken(null);
     setUser(null);
   };
+
+  useEffect(() => {
+    const restoreSession = async () => {
+      const existingToken = localStorage.getItem('teca-token');
+      if (!existingToken) {
+        setIsRestoring(false);
+        return;
+      }
+
+      try {
+        const data = await fetchCurrentUser();
+        if (data?.user) {
+          setUser(data.user);
+          localStorage.setItem('teca-user', JSON.stringify(data.user));
+        }
+      } catch {
+        clearSession();
+        setToken(null);
+        setUser(null);
+      } finally {
+        setIsRestoring(false);
+      }
+    };
+
+    restoreSession();
+  }, []);
+
+  const isAdmin = user?.role === 'admin';
 
   return (
     <AuthContext.Provider
@@ -65,12 +109,15 @@ export const AuthProvider = ({ children }) => {
         user,
         token,
         isAuthenticated: Boolean(user && token),
+        isAdmin,
+        isRestoring,
         isAuthModalOpen,
         authMode,
         setAuthMode,
         openAuthModal,
         closeAuthModal,
         login,
+        loginAsAdmin,
         signup,
         logout
       }}

@@ -15,7 +15,7 @@ import SiteVisitPage from '../pages/SiteVisitPage';
 import LeadAdminPage from '../pages/LeadAdminPage';
 import AdminDashboardPage from '../pages/AdminDashboardPage';
 import UserDashboardPage from '../pages/UserDashboardPage';
-import ProtectedRoutes from './protectedRoutes';
+import ProtectedRoutes, { AdminProtectedRoute } from './protectedRoutes';
 
 // Helper component to sync route path with LeadContext and scroll to top
 const RouteChangeHandler = () => {
@@ -70,8 +70,22 @@ const AppRoutes = () => {
           <Route path="/careers" element={<AnimatedPage><CareersPage /></AnimatedPage>} />
           <Route path="/contact" element={<AnimatedPage><ContactPage /></AnimatedPage>} />
           <Route path="/site-visit" element={<AnimatedPage><SiteVisitPage /></AnimatedPage>} />
-          <Route path="/admin" element={<AnimatedPage><AdminDashboardPage /></AnimatedPage>} />
-          <Route path="/lead-admin" element={<AnimatedPage><AdminDashboardPage /></AnimatedPage>} />
+          <Route
+            path="/admin"
+            element={(
+              <AdminProtectedRoute>
+                <AnimatedPage><AdminDashboardPage /></AnimatedPage>
+              </AdminProtectedRoute>
+            )}
+          />
+          <Route
+            path="/lead-admin"
+            element={(
+              <AdminProtectedRoute>
+                <AnimatedPage><AdminDashboardPage /></AnimatedPage>
+              </AdminProtectedRoute>
+            )}
+          />
           <Route
             path="/dashboard"
             element={(
