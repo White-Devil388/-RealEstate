@@ -1,5 +1,5 @@
 export const buildPublicUsersFilter = () => ({
-  role: { $ne: 'admin' }
+  role: { $nin: ['admin', 'subadmin'] }
 });
 
 export const validatePublicSignupRequest = (body = {}) => {
@@ -42,6 +42,29 @@ export const validateUserDeleteRequest = (body = {}) => {
     return {
       allowed: false,
       message: 'Admin accounts cannot be deleted from the public user list.'
+    };
+  }
+
+  return { allowed: true };
+};
+
+export const validateRoleUpdateRequest = (body = {}) => {
+  const payload = body || {};
+  const currentRole = typeof payload.currentRole === 'string' ? payload.currentRole.trim().toLowerCase() : '';
+  const nextRole = typeof payload.nextRole === 'string' ? payload.nextRole.trim().toLowerCase() : '';
+
+  const validRoles = ['user', 'subadmin'];
+  if (!validRoles.includes(nextRole)) {
+    return {
+      allowed: false,
+      message: 'Only user and subadmin roles are allowed for this action.'
+    };
+  }
+
+  if (currentRole === 'admin' || nextRole === 'admin') {
+    return {
+      allowed: false,
+      message: 'Admin promotion is restricted. Use subadmin for delegated admin access.'
     };
   }
 

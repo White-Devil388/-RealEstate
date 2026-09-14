@@ -7,7 +7,7 @@ const userSchema = new mongoose.Schema(
     passwordHash: { type: String, required: true },
     kycType: { type: String, required: true, trim: true, uppercase: true },
     kycNumber: { type: String, required: true, trim: true, uppercase: true },
-    role: { type: String, enum: ['user', 'admin'], default: 'user', index: true }
+    role: { type: String, enum: ['user', 'subadmin', 'admin'], default: 'user', index: true }
   },
   { timestamps: true }
 );

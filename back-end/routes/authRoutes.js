@@ -4,7 +4,7 @@ import User from '../models/User.js';
 import mongoose from 'mongoose';
 import { createAuthToken } from '../services/authentication.js';
 import { requireAdmin, requireAuth } from '../middleware/authMiddleware.js';
-import { buildPublicUsersFilter, validatePublicSignupRequest, validateSeedAdminRequest, validateUserDeleteRequest } from '../services/adminSecurity.js';
+import { buildPublicUsersFilter, validatePublicSignupRequest, validateRoleUpdateRequest, validateSeedAdminRequest, validateUserDeleteRequest } from '../services/adminSecurity.js';
 
 const router = express.Router();
 
@@ -12,7 +12,7 @@ const publicUser = (user) => ({
   id: user._id,
   name: user.name,
   email: user.email,
-  role: user.role === 'admin' ? 'admin' : 'user',
+  role: user.role === 'subadmin' ? 'subadmin' : user.role === 'admin' ? 'admin' : 'user',
   kycType: user.kycType || null,
   kycNumber: user.kycNumber || null
 });
@@ -169,7 +169,7 @@ router.post('/admin-login', async (req, res) => {
 
     const user = await authenticateUser(identifier, password);
     if (!user) return res.status(401).json({ message: 'Invalid email, username or password' });
-    if (user.role !== 'admin') {
+    if (user.role !== 'admin' && user.role !== 'subadmin') {
       return res.status(403).json({ message: 'This account is not authorized for the admin panel' });
     }
 
@@ -200,6 +200,38 @@ router.get('/users', requireAdmin, async (_req, res) => {
       createdAt: user.createdAt
     }))
   });
+});
+
+router.patch('/users/:id/role', requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { role } = req.body || {};
+
+    const userToUpdate = await User.findById(id).select('name email role');
+    if (!userToUpdate) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const validation = validateRoleUpdateRequest({
+      currentRole: userToUpdate.role,
+      nextRole: role
+    });
+
+    if (!validation.allowed) {
+      return res.status(400).json({ message: validation.message });
+    }
+
+    userToUpdate.role = role;
+    await userToUpdate.save();
+
+    return res.json({
+      message: 'User role updated successfully.',
+      user: publicUser(userToUpdate)
+    });
+  } catch (error) {
+    console.error('Update registered user role error:', error.message);
+    return res.status(500).json({ message: error.message || 'Unable to update user role' });
+  }
 });
 
 router.delete('/users/:id', requireAdmin, async (req, res) => {

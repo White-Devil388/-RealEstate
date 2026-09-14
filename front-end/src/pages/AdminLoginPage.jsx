@@ -22,7 +22,7 @@ const AdminLoginPage = () => {
     try {
       const loggedUser = await loginAsAdmin(form);
       if (showToast) showToast(`Welcome, ${loggedUser.name}`, 'success');
-      if (loggedUser?.role === 'admin') {
+      if (loggedUser?.role === 'admin' || loggedUser?.role === 'subadmin') {
         navigate('/admin', { replace: true });
       }
     } catch (error) {

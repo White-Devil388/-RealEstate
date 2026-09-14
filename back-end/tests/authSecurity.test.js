@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildPublicUsersFilter, validatePublicSignupRequest, validateUserDeleteRequest } from '../services/adminSecurity.js';
+import { buildPublicUsersFilter, validatePublicSignupRequest, validateRoleUpdateRequest, validateUserDeleteRequest } from '../services/adminSecurity.js';
 import { resolveAdminConfig } from '../services/seedAdmin.js';
 
 test('public signup rejects admin role override', () => {
@@ -15,8 +15,8 @@ test('public signup rejects admin secret attempts', () => {
   assert.match(result.message, /admin/i);
 });
 
-test('public user listing includes all non-admin records', () => {
-  assert.deepEqual(buildPublicUsersFilter(), { role: { $ne: 'admin' } });
+test('public user listing excludes admin and subadmin records', () => {
+  assert.deepEqual(buildPublicUsersFilter(), { role: { $nin: ['admin', 'subadmin'] } });
 });
 
 test('public signup requires KYC details', () => {
@@ -41,6 +41,15 @@ test('public-user deletion is allowed only for non-admin accounts', () => {
   const adminUser = validateUserDeleteRequest({ role: 'admin' });
   assert.equal(adminUser.allowed, false);
   assert.match(adminUser.message, /admin/i);
+});
+
+test('user role updates allow subadmin promotion but block admin promotion', () => {
+  const userUpgrade = validateRoleUpdateRequest({ currentRole: 'user', nextRole: 'subadmin' });
+  assert.equal(userUpgrade.allowed, true);
+
+  const adminUpgrade = validateRoleUpdateRequest({ currentRole: 'user', nextRole: 'admin' });
+  assert.equal(adminUpgrade.allowed, false);
+  assert.match(adminUpgrade.message, /subadmin|admin/i);
 });
 
 test('default admin config is used when env vars are not set', () => {

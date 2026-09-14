@@ -42,7 +42,8 @@ const AppContent = () => {
       <BrochureModal />
       <AuthContainer
         onAuthenticated={(user) => {
-          navigate(user?.role === 'admin' ? '/admin' : '/dashboard');
+          const isAdminAccess = user?.role === 'admin' || user?.role === 'subadmin';
+          navigate(isAdminAccess ? '/admin' : '/dashboard');
         }}
       />
     </div>

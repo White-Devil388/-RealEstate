@@ -26,7 +26,7 @@ export const requireAuth = async (req, res, next) => {
 
 export const requireAdmin = async (req, res, next) => {
   await requireAuth(req, res, () => {
-    if (req.user?.role !== 'admin') {
+    if (req.user?.role !== 'admin' && req.user?.role !== 'subadmin') {
       return res.status(403).json({ message: 'Admin access required' });
     }
     next();

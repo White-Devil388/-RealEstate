@@ -837,6 +837,26 @@ const AdminDashboardPage = () => {
     }
   };
 
+  const handleRoleUpgrade = async (userId, nextRole) => {
+    if (!userId || !nextRole) return;
+
+    try {
+      const response = await http.patch(`/auth/users/${userId}/role`, { role: nextRole });
+      const updatedUser = response.data?.user;
+
+      setRegisteredUsers((prev) => prev.map((entry) => {
+        const currentId = entry.id || entry._id;
+        if (currentId !== userId) return entry;
+        return { ...entry, role: updatedUser?.role || nextRole };
+      }));
+
+      showToast(updatedUser?.role === 'subadmin' ? 'User promoted to sub-admin.' : 'User role updated.', 'success');
+    } catch (error) {
+      console.error('Failed to update user role:', error);
+      showToast(error.response?.data?.message || 'Unable to update user role right now.', 'error');
+    }
+  };
+
   // Metrics Data
   const totalLeads = leads.length;
   const newLeadsCount = leads.filter(l => l.status === 'New').length;
@@ -1087,14 +1107,24 @@ const AdminDashboardPage = () => {
                               <td className="py-3 pr-4 text-ink-secondary">{entry.kycType || '—'}</td>
                               <td className="py-3 pr-4 text-ink-secondary">{entry.kycNumber || '—'}</td>
                               <td className="py-3 text-right">
-                                <button
-                                  type="button"
-                                  onClick={() => handleDeleteRegisteredUser(entry.id || entry._id)}
-                                  className="inline-flex items-center gap-1 rounded-xl border border-rose-500/40 bg-rose-500/10 px-2.5 py-1.5 text-[11px] font-bold text-rose-400 transition hover:bg-rose-500 hover:text-white"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                  Delete
-                                </button>
+                                <div className="flex justify-end gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRoleUpgrade(entry.id || entry._id, 'subadmin')}
+                                    className="inline-flex items-center gap-1 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1.5 text-[11px] font-bold text-emerald-300 transition hover:bg-emerald-500 hover:text-white"
+                                  >
+                                    <ShieldCheck className="w-3.5 h-3.5" />
+                                    Make Sub-admin
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteRegisteredUser(entry.id || entry._id)}
+                                    className="inline-flex items-center gap-1 rounded-xl border border-rose-500/40 bg-rose-500/10 px-2.5 py-1.5 text-[11px] font-bold text-rose-400 transition hover:bg-rose-500 hover:text-white"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                    Delete
+                                  </button>
+                                </div>
                               </td>
                             </tr>
                           ))
