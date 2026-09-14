@@ -5,6 +5,48 @@ import { useData } from '../context/DataContext';
 import { useSearchParams } from 'react-router-dom';
 import { Search, MapPin, Grid, Map, Calendar, ArrowRight, SlidersHorizontal, Check } from 'lucide-react';
 
+const normalizeProjectStatus = (value) => {
+  if (typeof value !== 'string') return '';
+
+  const normalized = value.trim().toLowerCase().replace(/[_-]+/g, ' ');
+
+  if (!normalized) return '';
+  if (['ongoing', 'in progress', 'under construction', 'launching soon', 'construction', 'development'].includes(normalized)) {
+    return 'ongoing';
+  }
+  if (['completed', 'ready to move', 'move in ready', 'move-in ready', 'completed project'].includes(normalized)) {
+    return 'completed';
+  }
+
+  return normalized;
+};
+
+const matchesProjectStatus = (projectStatus, selectedStatus) => {
+  if (selectedStatus === 'All') return true;
+
+  const projectStatusValue = normalizeProjectStatus(projectStatus);
+  const selectedStatusValue = normalizeProjectStatus(selectedStatus);
+
+  if (selectedStatusValue === 'ongoing') {
+    return ['ongoing', 'under construction', 'launching soon', 'in progress', 'construction', 'development'].includes(projectStatusValue)
+      || projectStatusValue.includes('construction')
+      || projectStatusValue.includes('launch');
+  }
+
+  if (selectedStatusValue === 'completed') {
+    return ['completed', 'ready to move', 'move in ready', 'move-in ready'].includes(projectStatusValue)
+      || projectStatusValue.includes('ready')
+      || projectStatusValue.includes('complete');
+  }
+
+  return projectStatusValue === selectedStatusValue || projectStatus === selectedStatus;
+};
+
+const getProjectStatusBadgeClass = (status) => {
+  const normalizedStatus = normalizeProjectStatus(status);
+  return normalizedStatus === 'completed' || normalizedStatus === 'ready to move' || status === 'Ready to Move' ? 'status-ready' : 'status-ongoing';
+};
+
 const ProjectsPage = () => {
   const { projects } = useProjects();
   const { companyData } = useData();
@@ -20,9 +62,11 @@ const ProjectsPage = () => {
   const PAGE_SIZE = 6;
 
   useEffect(() => {
+    const statusParam = searchParams.get('status');
+
     setSelectedLocation(searchParams.get('city') || 'All');
     setSelectedCategory(searchParams.get('category') || 'All');
-    setSelectedStatus(searchParams.get('status') || 'All');
+    setSelectedStatus(statusParam && ['ongoing', 'completed'].includes(statusParam.toLowerCase()) ? statusParam.toLowerCase() : (statusParam || 'All'));
   }, [searchParams]);
 
   useEffect(() => {
@@ -38,14 +82,17 @@ const ProjectsPage = () => {
     : [...new Set(projects.map((project) => project.status).filter(Boolean))])];
 
   const filteredProjects = projects.filter((project) => {
-    if (searchTerm && !project.name.toLowerCase().includes(searchTerm.toLowerCase()) && !project.location.toLowerCase().includes(searchTerm.toLowerCase())) {
+    const projectName = project?.name?.toLowerCase?.() || '';
+    const projectLocation = project?.location?.toLowerCase?.() || '';
+
+    if (searchTerm && !projectName.includes(searchTerm.toLowerCase()) && !projectLocation.includes(searchTerm.toLowerCase())) {
       return false;
     }
 
     if (selectedLocation !== 'All') {
       const selectedLocationValue = selectedLocation.toLowerCase();
-      const matchesCity = project.city.toLowerCase().includes(selectedLocationValue);
-      const matchesLocation = project.location.toLowerCase().includes(selectedLocationValue);
+      const matchesCity = (project.city || '').toLowerCase().includes(selectedLocationValue);
+      const matchesLocation = projectLocation.includes(selectedLocationValue);
 
       if (!matchesCity && !matchesLocation) {
         return false;
@@ -55,7 +102,7 @@ const ProjectsPage = () => {
     if (selectedCategory !== 'All' && project.category !== selectedCategory) {
       return false;
     }
-    if (selectedStatus !== 'All' && project.status !== selectedStatus) {
+    if (!matchesProjectStatus(project.status, selectedStatus)) {
       return false;
     }
     return true;
@@ -200,7 +247,7 @@ const ProjectsPage = () => {
                 >
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-accent font-bold">📍 {p.city}</span>
-                    <span className="badge-status status-ready text-[10px]">{p.status}</span>
+                    <span className={`badge-status ${getProjectStatusBadgeClass(p.status)} text-[10px]`}>{p.status}</span>
                   </div>
                   <h4 className="font-heading text-xl font-bold text-ink">{p.name}</h4>
                   <div className="text-xs text-ink-muted">{p.location}</div>
@@ -247,9 +294,7 @@ const ProjectsPage = () => {
 
                       <div className="absolute top-4 left-4 flex flex-wrap gap-2">
                         <span className="badge-gold text-xs">{project.category}</span>
-                        <span className={`badge-status ${
-                          project.status === 'Ready to Move' ? 'status-ready' : 'status-ongoing'
-                        }`}>
+                        <span className={`badge-status ${getProjectStatusBadgeClass(project.status)}`}>
                           {project.status}
                         </span>
                       </div>

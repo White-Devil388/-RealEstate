@@ -18,14 +18,6 @@ const PORT = process.env.PORT || 5000;
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
-connectDB();
-
-mongoose.connection.on('connected', () => {
-  ensureAdminAccount().catch((error) => {
-    console.warn('Unable to seed admin account:', error.message);
-  });
-});
-
 app.get('/api/health', (_req, res) => {
   res.json({
     status: 'ok',
@@ -42,6 +34,24 @@ app.use('/api/careers', careerRoutes);
 app.use('/api/company', companyRoutes);
 app.use('/api/media', mediaRoutes);
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+const startServer = async () => {
+  try {
+    await connectDB();
+    await ensureAdminAccount();
+  } catch (error) {
+    console.error('MongoDB startup failed:', error.message);
+  }
+
+  mongoose.connection.on('connected', () => {
+    ensureAdminAccount().catch((error) => {
+      console.warn('Unable to seed admin account:', error.message);
+    });
+  });
+
+  app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
+};
+
+startServer();
+

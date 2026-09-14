@@ -1,23 +1,32 @@
 import React, { useState } from 'react';
-import { LockKeyhole, Mail, UserRound, Loader2 } from 'lucide-react';
+import { LockKeyhole, Mail, UserRound, Loader2, IdCard } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useLead } from '../../context/LeadContext';
 
 const Signup = ({ onSuccess, onError, onToggleLogin }) => {
   const { signup } = useAuth();
   const { showToast } = useLead();
-  const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [form, setForm] = useState({ name: '', email: '', password: '', kycType: 'PAN', kycNumber: '' });
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (isLoading) return;
 
+    if (!form.kycNumber.trim()) {
+      onError('KYC number is required to create an account.');
+      return;
+    }
+
     setIsLoading(true);
     onError('');
 
     try {
-      const newUser = await signup(form);
+      const newUser = await signup({
+        ...form,
+        kycType: form.kycType,
+        kycNumber: form.kycNumber.trim()
+      });
       if (showToast) showToast(`Account created! Welcome to Gurukripa, ${newUser.name}!`, 'success');
       if (onSuccess) onSuccess(newUser);
     } catch (error) {
@@ -75,6 +84,41 @@ const Signup = ({ onSuccess, onError, onToggleLogin }) => {
             placeholder="Minimum 6 characters"
             value={form.password}
             onChange={(event) => setForm({ ...form, password: event.target.value })}
+            required
+            disabled={isLoading}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="form-group mb-0">
+          <label className="form-label" htmlFor="signup-kyc-type">KYC Type</label>
+          <div className="relative">
+            <IdCard className="absolute left-3 top-3 h-4 w-4 text-accent" />
+            <select
+              id="signup-kyc-type"
+              className="form-input pl-10"
+              value={form.kycType}
+              onChange={(event) => setForm({ ...form, kycType: event.target.value })}
+              disabled={isLoading}
+            >
+              <option value="PAN">PAN</option>
+              <option value="AADHAAR">Aadhaar</option>
+              <option value="PASSPORT">Passport</option>
+              <option value="DRIVING_LICENSE">Driving License</option>
+              <option value="OTHER">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="form-group mb-0">
+          <label className="form-label" htmlFor="signup-kyc-number">KYC Number</label>
+          <input
+            id="signup-kyc-number"
+            className="form-input"
+            placeholder="ABCDE1234F"
+            value={form.kycNumber}
+            onChange={(event) => setForm({ ...form, kycNumber: event.target.value })}
             required
             disabled={isLoading}
           />

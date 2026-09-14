@@ -3,8 +3,8 @@ import bcrypt from 'bcryptjs';
 import User from '../models/User.js';
 import mongoose from 'mongoose';
 import { createAuthToken } from '../services/authentication.js';
-import { requireAuth } from '../middleware/authMiddleware.js';
-import { validatePublicSignupRequest, validateSeedAdminRequest } from '../services/adminSecurity.js';
+import { requireAdmin, requireAuth } from '../middleware/authMiddleware.js';
+import { buildPublicUsersFilter, validatePublicSignupRequest, validateSeedAdminRequest, validateUserDeleteRequest } from '../services/adminSecurity.js';
 
 const router = express.Router();
 
@@ -12,7 +12,9 @@ const publicUser = (user) => ({
   id: user._id,
   name: user.name,
   email: user.email,
-  role: user.role === 'admin' ? 'admin' : 'user'
+  role: user.role === 'admin' ? 'admin' : 'user',
+  kycType: user.kycType || null,
+  kycNumber: user.kycNumber || null
 });
 
 const ensureDbConnection = async () => {
@@ -48,11 +50,17 @@ router.post('/signup', async (req, res) => {
     const isDbConnected = await ensureDbConnection();
     if (!isDbConnected) return res.status(503).json({ message: 'Database connection is connecting or unavailable' });
 
-    const { name, email, password } = req.body || {};
+    const { name, email, password, kycType, kycNumber } = req.body || {};
     if (!name?.trim() || !email?.trim() || !password) return res.status(400).json({ message: 'Name, email and password are required' });
     if (password.length < 6) return res.status(400).json({ message: 'Password must be at least 6 characters' });
 
-    const publicSignupCheck = validatePublicSignupRequest(req.body || {});
+    const normalizedKycType = typeof kycType === 'string' ? kycType.trim().toUpperCase() : '';
+    const normalizedKycNumber = typeof kycNumber === 'string' ? kycNumber.trim() : '';
+    const publicSignupCheck = validatePublicSignupRequest({
+      ...req.body,
+      kycType: normalizedKycType,
+      kycNumber: normalizedKycNumber
+    });
     if (!publicSignupCheck.allowed) {
       return res.status(403).json({ message: publicSignupCheck.message });
     }
@@ -66,6 +74,8 @@ router.post('/signup', async (req, res) => {
       name: name.trim(),
       email: normalizedEmail,
       passwordHash,
+      kycType: normalizedKycType,
+      kycNumber: normalizedKycNumber,
       role: 'user'
     });
     return res.status(201).json({ token: createAuthToken(user), user: publicUser(user) });
@@ -172,6 +182,49 @@ router.post('/admin-login', async (req, res) => {
 
 router.get('/me', requireAuth, async (req, res) => {
   return res.json({ user: publicUser(req.user) });
+});
+
+router.get('/users', requireAdmin, async (_req, res) => {
+  const users = await User.find(buildPublicUsersFilter())
+    .select('name email role kycType kycNumber createdAt')
+    .sort({ createdAt: -1 });
+
+  return res.json({
+    users: users.map((user) => ({
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      kycType: user.kycType,
+      kycNumber: user.kycNumber,
+      createdAt: user.createdAt
+    }))
+  });
+});
+
+router.delete('/users/:id', requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ message: 'User id is required' });
+    }
+
+    const userToDelete = await User.findById(id).select('role email name');
+    if (!userToDelete) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const validation = validateUserDeleteRequest({ role: userToDelete.role });
+    if (!validation.allowed) {
+      return res.status(403).json({ message: validation.message });
+    }
+
+    await User.findByIdAndDelete(id);
+    return res.json({ message: 'User deleted successfully.', userId: id });
+  } catch (error) {
+    console.error('Delete registered user error:', error.message);
+    return res.status(500).json({ message: error.message || 'Unable to delete user' });
+  }
 });
 
 export default router;

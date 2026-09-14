@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { updateCompanyInfo } from '../api/companyApi';
 import { createBlogApi, updateBlogApi, deleteBlogApi } from '../api/blogApi';
 import { createMediaApi, updateMediaApi, deleteMediaApi } from '../api/mediaApi';
+import http from '../api/http';
 import {
   ShieldCheck,
   LayoutDashboard,
@@ -165,6 +166,7 @@ const AdminDashboardPage = () => {
   const [visitVisibleCount, setVisitVisibleCount] = useState(LIST_PAGE_SIZE);
   const [blogVisibleCount, setBlogVisibleCount] = useState(LIST_PAGE_SIZE);
   const [mediaVisibleCount, setMediaVisibleCount] = useState(LIST_PAGE_SIZE);
+  const [registeredUsers, setRegisteredUsers] = useState([]);
 
   const getStatusBadgeClass = (status) => {
     switch (status) {
@@ -816,11 +818,46 @@ const AdminDashboardPage = () => {
     setDeletingMediaId(null);
   };
 
+  const handleDeleteRegisteredUser = async (userId) => {
+    if (!userId) return;
+
+    const target = registeredUsers.find((entry) => (entry.id || entry._id) === userId);
+    if (!target) return;
+
+    const confirmed = window.confirm(`Delete registered user ${target.name || target.email}? This cannot be undone.`);
+    if (!confirmed) return;
+
+    try {
+      await http.delete(`/auth/users/${userId}`);
+      setRegisteredUsers((prev) => prev.filter((entry) => (entry.id || entry._id) !== userId));
+      showToast('Registered user deleted successfully.', 'info');
+    } catch (error) {
+      console.error('Failed to delete registered user:', error);
+      showToast(error.response?.data?.message || 'Unable to delete registered user right now.', 'error');
+    }
+  };
+
   // Metrics Data
   const totalLeads = leads.length;
   const newLeadsCount = leads.filter(l => l.status === 'New').length;
   const convertedLeadsCount = leads.filter(l => l.status === 'Converted').length;
   const conversionRate = totalLeads > 0 ? ((convertedLeadsCount / totalLeads) * 100).toFixed(1) : '0.0';
+
+  React.useEffect(() => {
+    const loadRegisteredUsers = async () => {
+      if (user?.role !== 'admin') return;
+
+      try {
+        const response = await http.get('/auth/users');
+        setRegisteredUsers(response.data?.users || []);
+      } catch (error) {
+        console.error('Failed to load registered users:', error);
+        setRegisteredUsers([]);
+      }
+    };
+
+    loadRegisteredUsers();
+  }, [user?.role]);
 
   return (
     <div className="min-h-screen bg-background text-ink pb-24" style={{ paddingTop: '8.5rem' }}>
@@ -905,6 +942,23 @@ const AdminDashboardPage = () => {
               </button>
 
               <button
+                onClick={() => setActiveTab('registered-users')}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-semibold transition-all ${
+                  activeTab === 'registered-users'
+                    ? 'bg-accent text-white shadow-md font-bold'
+                    : 'text-ink-secondary hover:text-ink hover:bg-muted'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <UserCheck className="w-4 h-4" />
+                  <span>Registered Users</span>
+                </div>
+                <span className="bg-red-500 text-white text-[10px] px-2.5 py-1 rounded-full font-extrabold shadow-sm animate-pulse">
+                  {registeredUsers.length}
+                </span>
+              </button>
+
+              <button
                 onClick={() => setActiveTab('projects')}
                 className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-xs sm:text-sm font-semibold transition-all ${
                   activeTab === 'projects'
@@ -931,7 +985,7 @@ const AdminDashboardPage = () => {
                   <Calendar className="w-4 h-4" />
                   <span>Site Visits Manager</span>
                 </div>
-                <span className="bg-accent/20 text-accent text-[10px] px-2 py-0.5 rounded-full font-bold">
+                <span className="bg-red-500 text-white text-[10px] px-2.5 py-1 rounded-full font-extrabold shadow-sm animate-pulse">
                   {mockVisits.length}
                 </span>
               </button>
@@ -1001,12 +1055,69 @@ const AdminDashboardPage = () => {
           {/* Main Content Dashboard Area (9 cols) */}
           <main className="lg:col-span-9 space-y-6">
 
+            {/* TAB: Registered Users */}
+            {activeTab === 'registered-users' && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                <div className="glass-panel p-6 rounded-3xl border border-accent/35 bg-surface shadow-xl">
+                  <div className="flex items-center justify-between gap-3 mb-5">
+                    <div>
+                      <h3 className="font-heading text-xl font-bold text-ink">Registered Users</h3>
+                      <p className="text-xs text-ink-muted mt-1">Name, email and submitted KYC for all public signups.</p>
+                    </div>
+                    <span className="badge-gold text-[10px]">{registeredUsers.length} Users</span>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm">
+                      <thead>
+                        <tr className="border-b border-border text-ink-muted">
+                          <th className="pb-3 pr-4 font-semibold">Name</th>
+                          <th className="pb-3 pr-4 font-semibold">Email</th>
+                          <th className="pb-3 pr-4 font-semibold">KYC Type</th>
+                          <th className="pb-3 pr-4 font-semibold">KYC Number</th>
+                          <th className="pb-3 text-right font-semibold">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {registeredUsers.length ? (
+                          registeredUsers.map((entry) => (
+                            <tr key={entry.id || entry.email} className="border-b border-border/80 align-top">
+                              <td className="py-3 pr-4 text-ink font-medium">{entry.name}</td>
+                              <td className="py-3 pr-4 text-ink-secondary">{entry.email}</td>
+                              <td className="py-3 pr-4 text-ink-secondary">{entry.kycType || '—'}</td>
+                              <td className="py-3 pr-4 text-ink-secondary">{entry.kycNumber || '—'}</td>
+                              <td className="py-3 text-right">
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteRegisteredUser(entry.id || entry._id)}
+                                  className="inline-flex items-center gap-1 rounded-xl border border-rose-500/40 bg-rose-500/10 px-2.5 py-1.5 text-[11px] font-bold text-rose-400 transition hover:bg-rose-500 hover:text-white"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                  Delete
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="5" className="py-6 text-center text-ink-muted">
+                              No public users have signed up yet.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
             {/* TAB 1: OVERVIEW & ANALYTICS */}
             {activeTab === 'overview' && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
                 
                 {/* 4 Metric Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
                   <div className="glass-panel p-5 rounded-3xl border border-accent/30 bg-surface shadow-lg space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-extrabold uppercase tracking-wider text-ink-muted">Total Leads</span>
@@ -1016,6 +1127,17 @@ const AdminDashboardPage = () => {
                     <div className="text-[11px] text-emerald-400 font-medium flex items-center gap-1">
                       <TrendingUp className="w-3.5 h-3.5" />
                       <span>Live inquiries capture active</span>
+                    </div>
+                  </div>
+
+                  <div className="glass-panel p-5 rounded-3xl border border-accent/30 bg-surface shadow-lg space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-ink-muted">Total Users</span>
+                      <UserCheck className="w-5 h-5 text-red-400" />
+                    </div>
+                    <div className="text-3xl font-bold text-ink">{registeredUsers.length}</div>
+                    <div className="text-[11px] text-red-400 font-medium">
+                      Public signups registered
                     </div>
                   </div>
 
